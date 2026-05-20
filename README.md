@@ -26,6 +26,7 @@ Quick deploy options (all provide HTTPS)
 Install on Android
 1. Open the HTTPS URL in Chrome.
 2. Use the browser prompt or menu → "Install" / "Add to Home screen".
+3. If you want a native shell later, run Capacitor on a machine with Android Studio installed.
 
 Install on iPhone
 1. Open the HTTPS URL in Safari.
