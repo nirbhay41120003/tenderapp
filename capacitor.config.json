@@ -1,0 +1,6 @@
+{
+  "appId": "com.nirbh.tendermgr",
+  "appName": "Tender Manager",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}

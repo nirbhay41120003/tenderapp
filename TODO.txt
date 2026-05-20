@@ -1,0 +1,80 @@
+Create a simple, mobile-friendly web app for a road and civil 
+construction contractor. The app should have a clean dashboard
+and the following features. Store all data in localStorage — no server
+or login needed. Single HTML file, works offline. 
+Clean simple UI with large buttons, easy to read on mobile and desktop.
+Use dropdowns wherever possible. All totals and profits auto-calculate.
+Do it step wise one by one 
+
+1. DASHBOARD
+Show live summary cards: Total Revenue, Total Expenses, Gross Profit,
+Active Projects, Outstanding Receivables. All numbers pull 
+automatically from the other sections.
+
+2. PROJECTS
+Add/edit/delete projects with fields: project name, location, 
+project type (Road / Drainage / Canal / Other), 
+start date, end date, contract value (₹),mislenious(₹) also 
+percent of contract value option
+status (Active / Completed / On Hold / Cancelled / Pending), and notes. 
+Show a project list with quick-view cards.
+
+3. EXPENSES
+Log expenses with: date, project (dropdown linked to project list), 
+category (Labour / Materials / Equipment & Fuel / Transport / 
+Permits & Fees / Subcontractor / Office / Miscellaneous), 
+amount (₹), vendor name, payment mode (Cash / UPI / Bank Transfer / 
+Cheque / Credit), and notes. 
+Show expense total per project 
+and per category.
+
+
+4. MATERIALS
+Log material purchases with: date, project (linked dropdown), material 
+name, quantity, unit (Bag / Ton / Cubic Meter / Sq Meter / Running 
+Meter / Litre / Nos / Kg / Truck Load), rate per unit (₹) — 
+auto-calculate total amount. Supplier name, bill number, payment 
+status (Paid / Unpaid / Credit),due amount,paid amount and notes.
+
+5. PROFIT & LOSS
+Auto-generated statement showing: Total Contract Value, Total 
+Revenue Received, Outstanding Receivables, Labour Cost, Materials 
+Cost, Equipment & Fuel Cost, Subcontractor Cost, Transport Cost, 
+Total Direct Costs, Gross Profit, Gross Margin %, Overhead Costs, 
+Net Profit, Net Margin %. All figures pull automatically from the 
+other sections.
+
+6. ESTIMATOR
+Step 1 — Project Details
+Enter: project name, project type (dropdown), total contract value (₹).
+Step 2 — Cost Breakdown (user adjustable)
+Show editable percentage inputs as well as rupees input or sliders for each cost category with 
+these defaults:
+
+Labour — 12%
+Materials — 35%
+Equipment & Fuel — 10%
+Transport — 5%
+Subcontractors — 8%
+Permits & Fees — 2%
+Miscellaneous — 2%
+Total Costs — auto-sum
+Estimated Profit — auto = 100% minus total cost %
+
+
+
+What If Mode
+A toggle or input that lets the user change only the contract value 
+and instantly see all amounts recalculate without touching the 
+percentages again.
+
+GENERAL REQUIREMENTS
+
+Use ₹ (Indian Rupee) for all currency
+All data stored in localStorage
+Single HTML file, no frameworks or external dependencies except a charting library like Chart.js loaded from CDN
+Works fully offline after first load
+Clean professional UI — card-based layout, color coded sections, easy navigation between sections via a sidebar or bottom nav bar
+Fully responsive for mobile and desktop
+Export to PDF option for invoices and estimates
+Print-friendly layouts

@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f5b78">
+  <title>Tender Manager</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-2: #eef3f7;
+      --text: #16202a;
+      --muted: #5d6a76;
+      --primary: #0f5b78;
+      --primary-2: #1e7aa1;
+      --accent: #d97706;
+      --success: #15803d;
+      --danger: #b91c1c;
+      --warning: #b45309;
+      --border: #d7e0e7;
+      --shadow: 0 12px 30px rgba(16, 24, 40, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; min-height: 100%; background: radial-gradient(circle at top left, #eaf4f8 0, #f4f6f8 35%, #f2f5f8 100%); color: var(--text); font-family: "Segoe UI", Tahoma, Arial, sans-serif; }
+
+    body { padding-bottom: 84px; }
+
+    button, input, select, textarea { font: inherit; }
+
+    button { cursor: pointer; border: 0; }
+
+    .app-shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+    .sidebar {
+      background: linear-gradient(180deg, #0f5b78 0%, #0d4458 100%);
+      color: #fff;
+      padding: 22px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .brand { padding: 8px 10px 14px; border-bottom: 1px solid rgba(255,255,255,.14); }
+    .brand h1 { margin: 0; font-size: 1.4rem; letter-spacing: .3px; }
+    .brand p { margin: 6px 0 0; color: rgba(255,255,255,.8); font-size: .92rem; }
+
+    .nav-list { display: grid; gap: 10px; }
+
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      padding: 14px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.1);
+      transition: transform .16s ease, background .16s ease;
+      font-weight: 700;
+    }
+
+    .nav-btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.14); }
+    .nav-btn.active { background: #fff; color: var(--primary); }
+
+    .sidebar .tip {
+      margin-top: auto;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.09);
+      color: rgba(255,255,255,.9);
+      font-size: .92rem;
+      line-height: 1.45;
+    }
+
+    .content { padding: 22px; }
+
+    .page { display: none; animation: fadeIn .18s ease; }
+    .page.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: .2; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .topbar h2 { margin: 0; font-size: clamp(1.4rem, 2vw, 2rem); }
+    .topbar p { margin: 4px 0 0; color: var(--muted); }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn {
+      padding: 13px 16px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+    }
+
+    .btn.secondary { background: #fff; color: var(--primary); border-color: var(--border); box-shadow: none; }
+    .btn.danger { background: var(--danger); }
+    .btn.soft { background: var(--surface-2); color: var(--text); border-color: var(--border); box-shadow: none; }
+
+    .grid { display: grid; gap: 16px; }
+    .cards-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .cards-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .cards-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cards-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .summary-card { position: relative; overflow: hidden; }
+    .summary-card::after {
+      content: '';
+      position: absolute;
+      inset: auto -30px -24px auto;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(15,91,120,.08), rgba(15,91,120,0));
+    }
+
+    .summary-label { color: var(--muted); font-size: .92rem; margin-bottom: 8px; }
+    .summary-value { font-size: 1.6rem; font-weight: 800; margin: 0; }
+    .summary-note { margin-top: 6px; color: var(--muted); font-size: .84rem; }
+
+    .section-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin: 20px 0 14px; flex-wrap: wrap; }
+    .section-head h3 { margin: 0; font-size: 1.2rem; }
+    .section-head .sub { margin: 4px 0 0; color: var(--muted); }
+
+    .panel-title { margin: 0 0 14px; font-size: 1.05rem; }
+
+    .form-grid { display: grid; gap: 12px; grid-template-columns: repeat(12, minmax(0, 1fr)); }
+
+    .field { grid-column: span 12; }
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-9 { grid-column: span 9; }
+    .span-12 { grid-column: span 12; }
+
+    label { display: block; font-weight: 700; margin-bottom: 6px; }
+    .hint { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 14px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea { min-height: 94px; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus { border-color: var(--primary-2); box-shadow: 0 0 0 4px rgba(30,122,161,.08); }
+
+    .inline-toggle { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      padding: 11px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .chip.active { background: var(--primary); color: #fff; border-color: transparent; }
+
+    .stack { display: grid; gap: 12px; }
+
+    .list-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+
+    .mini-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    .badge.success { background: rgba(21,128,61,.1); color: var(--success); }
+    .badge.warn { background: rgba(180,83,9,.12); color: var(--warning); }
+    .badge.danger { background: rgba(185,28,28,.1); color: var(--danger); }
+    .badge.primary { background: rgba(15,91,120,.1); color: var(--primary); }
+
+    .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .card-actions .btn { padding: 10px 12px; box-shadow: none; }
+
+    .table-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 16px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; min-width: 720px; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: #f8fbfd; font-size: .9rem; }
+    tbody tr:hover { background: #fafcfe; }
+
+    .report-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+
+    .compact-summary { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+    .segmented {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface-2);
+    }
+
+    .seg-btn {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--muted);
+      border: 0;
+      font-weight: 800;
+    }
+
+    .seg-btn.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 4px 14px rgba(16, 24, 40, 0.08);
+    }
+
+    .report-panel[hidden] { display: none !important; }
+
+    .calc-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: minmax(140px, 220px) 120px 120px 1fr;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .calc-row .category { font-weight: 700; }
+    .calc-row input[type="range"] { padding: 0; }
+    .calc-row .small-input { padding: 11px 10px; }
+
+    .split { display: grid; gap: 16px; grid-template-columns: 1.1fr .9fr; }
+
+    .print-only { display: none; }
+
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      padding: 10px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mobile-nav .nav-btn { color: var(--text); background: #fff; border-color: var(--border); box-shadow: none; padding: 12px 8px; text-align: center; font-size: .85rem; }
+    .mobile-nav .nav-btn.active { background: var(--primary); color: #fff; }
+
+    .muted { color: var(--muted); }
+    .right { text-align: right; }
+    .pill-line { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pill { padding: 8px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); font-weight: 700; }
+    .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+    .hidden { display: none !important; }
+
+    .estimate-banner {
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0f5b78, #1e7aa1);
+      color: #fff;
+      padding: 18px;
+    }
+
+    .estimate-banner h4 { margin: 0 0 4px; font-size: 1.2rem; }
+    .estimate-banner p { margin: 0; opacity: .9; }
+
+    @media (max-width: 1180px) {
+      .cards-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .split { grid-template-columns: 1fr; }
+      .calc-row { grid-template-columns: 1fr 120px 120px; }
+      .calc-row input[type="range"] { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 860px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .content { padding: 16px 16px 96px; }
+      .mobile-nav { display: grid; }
+      .cards-5, .cards-4, .cards-3, .cards-2 { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .span-2, .span-3, .span-4, .span-5, .span-6, .span-7, .span-8, .span-9, .span-12 { grid-column: auto; }
+      .calc-row { grid-template-columns: 1fr; }
+      table { min-width: 620px; }
+    }
+
+    @media print {
+      body { background: #fff; padding-bottom: 0; }
+      .sidebar, .mobile-nav, .no-print, .topbar .actions, .card-actions, .nav-btn, .btn, .estimate-banner { display: none !important; }
+      .app-shell { display: block; }
+      .content { padding: 0; }
+      .page { display: block !important; }
+      .print-only { display: block; }
+      .card, .table-wrap { box-shadow: none; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; }
+      .card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>Tender Manager</h1>
+        <p>Road and civil contractor dashboard</p>
+      </div>
+      <div class="nav-list" id="sidebarNav"></div>
+      <div class="tip">
+        Offline-first single-file app. All records stay in localStorage and update summaries automatically.
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="page active" id="dashboardPage">
+        <div class="topbar">
+          <div>
+            <h2>Dashboard</h2>
+            <p>Live summary cards pulled from projects, expenses, and materials.</p>
+          </div>
+          <div class="actions no-print">
+            <button class="btn secondary" id="resetDemoBtn">Clear All Data</button>
+            <button class="btn" id="exportBtn">Export JSON</button>
+            <button class="btn" id="importBtn">Import JSON</button>
+            <input id="importFile" type="file" accept="application/json" style="display:none" />
+            <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+          </div>
+        </div>
+
+        <div class="grid cards-5" id="dashboardCards"></div>
+
+        <div class="section-head">
+          <div>
+            <h3>At a glance</h3>
+            <p class="sub">Shortcuts for the working areas.</p>
+          </div>
+        </div>
+
+        <div class="grid cards-3">
+          <div class="card">
+            <h4 class="panel-title">Projects</h4>
+            <p class="muted">Add project details, track revenue received, and view quick cards.</p>
+            <div class="card-actions"><button class="btn" data-nav="projectsPage">Open Projects</button></div>
+          </div>
+          <div class="card">
+            <h4 class="panel-title">Expenses</h4>
+            <p class="muted">Log labour, materials, fuel, transport, permits, and office costs.</p>
+            <div class="card-actions"><button class="btn" data-nav="expensesPage">Open Expenses</button></div>
+          </div>
+          <div class="card">
+            <h4 class="panel-title">Materials</h4>
+            <p class="muted">Record purchases with due and paid values for each bill.</p>
+            <div class="card-actions"><button class="btn" data-nav="materialsPage">Open Materials</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="projectsPage">
+        <div class="topbar">
+          <div>
+            <h2>Projects</h2>
+            <p>Add, edit, delete, and print invoice-style summaries.</p>
+          </div>
+          <div class="actions no-print">
+            <button class="btn secondary" data-nav="dashboardPage">Back to Dashboard</button>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="card">
+            <h3 class="panel-title" id="projectFormTitle">Add Project</h3>
+            <form id="projectForm" class="stack">
+              <input type="hidden" id="projectId" />
+              <div class="form-grid">
+                <div class="field span-6">
+                  <label>Project name</label>
+                  <input id="projectName" required placeholder="e.g. NH-48 Road Widening" />
+                </div>
+                <div class="field span-6">
+                  <label>Location</label>
+                  <input id="projectLocation" required placeholder="e.g. Surat, Gujarat" />
+                </div>
+                <div class="field span-4">
+                  <label>Project type</label>
+                  <select id="projectType" required>
+                    <option>Road</option>
+                    <option>Drainage</option>
+                    <option>Canal</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div class="field span-4">
+                  <label>Status</label>
+                  <select id="projectStatus" required>
+                    <option>Active</option>
+                    <option>Completed</option>
+                    <option>On Hold</option>
+                    <option>Cancelled</option>
+                    <option>Pending</option>
+                  </select>
+                </div>
+                <div class="field span-4">
+                  <label>Start date</label>
+                  <input id="projectStart" type="date" />
+                </div>
+                <div class="field span-4">
+                  <label>End date</label>
+                  <input id="projectEnd" type="date" />
+                </div>
+                <div class="field span-4">
+                  <label>Contract value (₹)</label>
+                  <input id="projectContract" type="number" min="0" step="0.01" required placeholder="0" />
+                </div>
+                <div class="field span-4">
+                  <label>Revenue received (₹)</label>
+                  <input id="projectReceived" type="number" min="0" step="0.01" value="0" />
+                  <div class="hint">Used for dashboard and receivables.</div>
+                </div>
+                <div class="field span-4">
+                  <label>Misc value mode</label>
+                  <select id="projectMiscMode">
+                    <option value="amount">Amount</option>
+                    <option value="percent">Percent of contract</option>
+                  </select>
+                </div>
+                <div class="field span-4">
+                  <label>Miscellaneous (₹ or %)</label>
+                  <input id="projectMisc" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field span-12">
+                  <label>Notes</label>
+                  <textarea id="projectNotes" placeholder="Scope, milestones, special terms..."></textarea>
+                </div>
+              </div>
+              <div class="card-actions no-print">
+                <button class="btn" type="submit" id="projectSaveBtn">Save Project</button>
+                <button class="btn secondary" type="button" id="projectCancelBtn">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 class="panel-title">Project Totals</h3>
+            <div class="pill-line" id="projectTotalsPills"></div>
+            <div class="divider"></div>
+            <div class="list-grid" id="projectList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="expensesPage">
+        <div class="topbar">
+          <div>
+            <h2>Expenses</h2>
+            <p>Track expense entries and totals per project and category.</p>
+          </div>
+          <div class="actions no-print">
+            <button class="btn secondary" data-nav="dashboardPage">Back to Dashboard</button>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="card">
+            <h3 class="panel-title" id="expenseFormTitle">Add Expense</h3>
+            <form id="expenseForm" class="stack">
+              <input type="hidden" id="expenseId" />
+              <div class="form-grid">
+                <div class="field span-4">
+                  <label>Date</label>
+                  <input id="expenseDate" type="date" required />
+                </div>
+                <div class="field span-8">
+                  <label>Project</label>
+                  <select id="expenseProject" required></select>
+                </div>
+                <div class="field span-4">
+                  <label>Category</label>
+                  <select id="expenseCategory" required>
+                    <option>Labour</option>
+                    <option>Materials</option>
+                    <option>Equipment & Fuel</option>
+                    <option>Transport</option>
+                    <option>Permits & Fees</option>
+                    <option>Subcontractor</option>
+                    <option>Office</option>
+                    <option>Miscellaneous</option>
+                  </select>
+                </div>
+                <div class="field span-4">
+                  <label>Amount (₹)</label>
+                  <input id="expenseAmount" type="number" min="0" step="0.01" required />
+                </div>
+                <div class="field span-4">
+                  <label>Vendor name</label>
+                  <input id="expenseVendor" placeholder="Vendor / labour team" />
+                </div>
+                <div class="field span-4">
+                  <label>Payment mode</label>
+                  <select id="expenseMode">
+                    <option>Cash</option>
+                    <option>UPI</option>
+                    <option>Bank Transfer</option>
+                    <option>Cheque</option>
+                    <option>Credit</option>
+                  </select>
+                </div>
+                <div class="field span-12">
+                  <label>Notes</label>
+                  <textarea id="expenseNotes"></textarea>
+                </div>
+              </div>
+              <div class="card-actions no-print">
+                <button class="btn" type="submit" id="expenseSaveBtn">Save Expense</button>
+                <button class="btn secondary" type="button" id="expenseCancelBtn">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="topbar" style="margin-bottom:12px;">
+              <div>
+                <h3 class="panel-title" style="margin-bottom:4px;">Expense Totals</h3>
+                <p class="sub">Quick view with one detailed breakdown at a time.</p>
+              </div>
+              <div class="segmented no-print" id="expenseViewToggle">
+                <button class="seg-btn active" type="button" data-exp-view="project">By Project</button>
+                <button class="seg-btn" type="button" data-exp-view="category">By Category</button>
+              </div>
+            </div>
+            <div class="compact-summary" id="expenseSummaryCards"></div>
+            <div class="divider"></div>
+            <div class="table-wrap report-panel" id="expenseProjectPanel">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Total</th>
+                    <th>Labour</th>
+                    <th>Materials</th>
+                    <th>Equipment & Fuel</th>
+                    <th>Transport</th>
+                    <th>Permits & Fees</th>
+                    <th>Subcontractor</th>
+                    <th>Office</th>
+                    <th>Miscellaneous</th>
+                  </tr>
+                </thead>
+                <tbody id="expenseByProject"></tbody>
+              </table>
+            </div>
+            <div class="table-wrap report-panel" id="expenseCategoryPanel" hidden>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="expenseByCategory"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="materialsPage">
+        <div class="topbar">
+          <div>
+            <h2>Materials</h2>
+            <p>Log material purchases with auto-calculated totals and balance due.</p>
+          </div>
+          <div class="actions no-print">
+            <button class="btn secondary" data-nav="dashboardPage">Back to Dashboard</button>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="card">
+            <h3 class="panel-title" id="materialFormTitle">Add Material Purchase</h3>
+            <form id="materialForm" class="stack">
+              <input type="hidden" id="materialId" />
+              <div class="form-grid">
+                <div class="field span-4">
+                  <label>Date</label>
+                  <input id="materialDate" type="date" required />
+                </div>
+                <div class="field span-8">
+                  <label>Project</label>
+                  <select id="materialProject" required></select>
+                </div>
+                <div class="field span-4">
+                  <label>Material name</label>
+                  <input id="materialName" required placeholder="Cement / aggregate / pipe" />
+                </div>
+                <div class="field span-4">
+                  <label>Quantity</label>
+                  <input id="materialQty" type="number" min="0" step="0.01" required />
+                </div>
+                <div class="field span-4">
+                  <label>Unit</label>
+                  <select id="materialUnit" required>
+                    <option>Bag</option>
+                    <option>Ton</option>
+                    <option>Cubic Meter</option>
+                    <option>Sq Meter</option>
+                    <option>Running Meter</option>
+                    <option>Litre</option>
+                    <option>Nos</option>
+                    <option>Kg</option>
+                    <option>Truck Load</option>
+                  </select>
+                </div>
+                <div class="field span-4">
+                  <label>Rate per unit (₹)</label>
+                  <input id="materialRate" type="number" min="0" step="0.01" required />
+                </div>
+                <div class="field span-4">
+                  <label>Total amount (₹)</label>
+                  <input id="materialTotal" type="number" step="0.01" readonly />
+                  <div class="hint">Auto-calculated from quantity × rate.</div>
+                </div>
+                <div class="field span-4">
+                  <label>Supplier name</label>
+                  <input id="materialSupplier" />
+                </div>
+                <div class="field span-4">
+                  <label>Bill number</label>
+                  <input id="materialBill" />
+                </div>
+                <div class="field span-4">
+                  <label>Payment status</label>
+                  <select id="materialPaymentStatus">
+                    <option>Paid</option>
+                    <option>Unpaid</option>
+                    <option>Credit</option>
+                  </select>
+                </div>
+                <div class="field span-4">
+                  <label>Paid amount (₹)</label>
+                  <input id="materialPaid" type="number" min="0" step="0.01" value="0" />
+                </div>
+                <div class="field span-4">
+                  <label>Due amount (₹)</label>
+                  <input id="materialDue" type="number" min="0" step="0.01" readonly />
+                </div>
+                <div class="field span-12">
+                  <label>Notes</label>
+                  <textarea id="materialNotes"></textarea>
+                </div>
+              </div>
+              <div class="card-actions no-print">
+                <button class="btn" type="submit" id="materialSaveBtn">Save Material</button>
+                <button class="btn secondary" type="button" id="materialCancelBtn">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 class="panel-title">Material Summary</h3>
+            <div class="report-grid" id="materialSummaryCards"></div>
+            <div class="divider"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Total Purchases</th>
+                    <th>Due Amount</th>
+                    <th>Paid Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="materialByProject"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="profitPage">
+        <div class="topbar">
+          <div>
+            <h2>Profit & Loss</h2>
+            <p>Auto-generated statement based on all entered project, expense, and material data.</p>
+          </div>
+          <div class="actions no-print">
+            <button class="btn secondary" data-nav="dashboardPage">Back to Dashboard</button>
+          </div>
+        </div>
+
+        <div class="grid cards-3" id="plCards"></div>
+
+        <div class="section-head">
+          <div>
+            <h3>Statement</h3>
+            <p class="sub">Direct costs and margins update instantly.</p>
+          </div>
+        </div>
+
+        <div class="card table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Line item</th>
+                <th class="right">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="plRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="estimatorPage">
+        <div class="topbar">
+          <div>
+            <h2>Estimator</h2>
+            <p>Adjust percentages, change the contract value in what-if mode, and export a printable estimate.</p>
+          </div>
+          <div class="actions no-print">
+            <button class="btn secondary" data-nav="dashboardPage">Back to Dashboard</button>
+            <button class="btn" id="printEstimateBtn">Export Estimate PDF</button>
+          </div>
+        </div>
+
+        <div class="estimate-banner card no-print">
+          <h4>What If Mode</h4>
+          <p>Change only the contract value and every rupee amount recalculates instantly without resetting the percentages.</p>
+        </div>
+
+        <div class="split">
+          <div class="card">
+            <h3 class="panel-title">Step 1: Project Details</h3>
+            <div class="form-grid">
+              <div class="field span-6">
+                <label>Project name</label>
+                <input id="estimateProjectName" placeholder="Project name" />
+              </div>
+              <div class="field span-6">
+                <label>Project type</label>
+                <select id="estimateProjectType">
+                  <option>Road</option>
+                  <option>Drainage</option>
+                  <option>Canal</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="field span-6">
+                <label>Contract value (₹)</label>
+                <input id="estimateContract" type="number" min="0" step="0.01" value="10000000" />
+              </div>
+              <div class="field span-6">
+                <label>What if mode</label>
+                <select id="estimateWhatIf">
+                  <option value="off">Off</option>
+                  <option value="on">On</option>
+                </select>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="pill-line" id="estimateSummaryPills"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="panel-title">Step 2: Cost Breakdown</h3>
+            <div id="estimateRows"></div>
+            <div class="divider"></div>
+            <div class="report-grid">
+              <div class="card soft">
+                <div class="summary-label">Total Costs</div>
+                <div class="summary-value" id="estimateTotalCost"></div>
+              </div>
+              <div class="card soft">
+                <div class="summary-label">Estimated Profit</div>
+                <div class="summary-value" id="estimateProfit"></div>
+              </div>
+              <div class="card soft">
+                <div class="summary-label">Total Cost %</div>
+                <div class="summary-value" id="estimateTotalPct"></div>
+              </div>
+              <div class="card soft">
+                <div class="summary-label">Profit %</div>
+                <div class="summary-value" id="estimateProfitPct"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="mobile-nav" id="mobileNav"></nav>
+
+  <script>
+    const STORAGE_KEY = 'tm_contractor_app_v1';
+    const NAV_ITEMS = [
+      { id: 'dashboardPage', label: 'Dashboard' },
+      { id: 'projectsPage', label: 'Projects' },
+      { id: 'expensesPage', label: 'Expenses' },
+      { id: 'materialsPage', label: 'Materials' },
+      { id: 'profitPage', label: 'P&L' },
+      { id: 'estimatorPage', label: 'Estimator' }
+    ];
+
+    const DEFAULT_ESTIMATE = [
+      { key: 'Labour', pct: 12 },
+      { key: 'Materials', pct: 35 },
+      { key: 'Equipment & Fuel', pct: 10 },
+      { key: 'Transport', pct: 5 },
+      { key: 'Subcontractors', pct: 8 },
+      { key: 'Permits & Fees', pct: 2 },
+      { key: 'Miscellaneous', pct: 2 }
+    ];
+
+    const MONEY = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+    const state = loadState();
+    let estimateState = {
+      projectName: '',
+      projectType: 'Road',
+      contractValue: 10000000,
+      whatIf: 'off',
+      rows: DEFAULT_ESTIMATE.map(item => ({ ...item }))
+    };
+
+    function loadState() {
+      const fallback = { projects: [], expenses: [], materials: [] };
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return {
+          projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
+          materials: Array.isArray(parsed.materials) ? parsed.materials : []
+        };
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      // also persist a backup to IndexedDB (best-effort)
+      try { saveBackupToIDB(); } catch (e) { /* ignore async failures */ }
+    }
+
+    // ----- IndexedDB backup / export-import helpers -----
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        if (!('indexedDB' in window)) return reject(new Error('IndexedDB not supported'));
+        const req = indexedDB.open('tender_manager_db', 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains('backups')) db.createObjectStore('backups', { keyPath: 'ts' });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveBackupToIDB() {
+      try {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction('backups', 'readwrite');
+          const store = tx.objectStore('backups');
+          store.add({ ts: Date.now(), data: JSON.stringify(state) });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error || new Error('TX failed'));
+        });
+      } catch (err) {
+        console.warn('Backup failed', err);
+      }
+    }
+
+    async function getLatestBackupFromIDB() {
+      try {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction('backups', 'readonly');
+          const store = tx.objectStore('backups');
+          // open cursor in reverse to get latest
+          const req = store.openCursor(null, 'prev');
+          req.onsuccess = e => {
+            const cur = e.target.result;
+            if (!cur) return resolve(null);
+            resolve(cur.value && cur.value.data ? JSON.parse(cur.value.data) : null);
+          };
+          req.onerror = () => reject(req.error);
+        });
+      } catch (err) {
+        console.warn('Read backup failed', err);
+        return null;
+      }
+    }
+
+    function downloadJSON(filename, obj) {
+      const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportStateToFile() {
+      const exportObj = { meta: { exportedAt: new Date().toISOString() }, data: state };
+      downloadJSON('tender-manager-backup.json', exportObj);
+    }
+
+    function importStateFromObject(obj) {
+      if (!obj) return alert('Invalid file');
+      const incoming = obj.data || obj;
+      if (!incoming || typeof incoming !== 'object') return alert('Invalid backup format');
+      state.projects = Array.isArray(incoming.projects) ? incoming.projects : [];
+      state.expenses = Array.isArray(incoming.expenses) ? incoming.expenses : [];
+      state.materials = Array.isArray(incoming.materials) ? incoming.materials : [];
+      saveState();
+      renderAll();
+      alert('Import complete');
+    }
+
+    function handleImportFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          importStateFromObject(parsed);
+        } catch (err) { alert('Failed to parse JSON file'); }
+      };
+      reader.readAsText(file);
+    }
+
+    // auto-backup every 5 minutes
+    setInterval(() => { try { saveBackupToIDB(); } catch (e) {} }, 1000 * 60 * 5);
+
+    function uid(prefix) {
+      return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+    }
+
+    function toNumber(value) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function money(value) {
+      return MONEY.format(toNumber(value));
+    }
+
+    function safeDate(value) {
+      return value ? new Date(value).toLocaleDateString('en-IN') : '—';
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === pageId));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.nav === pageId));
+      if (pageId === 'estimatorPage') renderEstimate();
+      if (pageId === 'profitPage') renderProfit();
+      if (pageId === 'dashboardPage') renderDashboard();
+      if (pageId === 'expensesPage') renderExpenses();
+      if (pageId === 'materialsPage') renderMaterials();
+      if (pageId === 'projectsPage') renderProjects();
+    }
+
+    function getProjectLabel(id) {
+      if (!id) return 'All Projects';
+      const project = state.projects.find(item => item.id === id);
+      return project ? project.name : 'Unknown project';
+    }
+
+    function getProjectFinance(project) {
+      const miscAmount = project.miscMode === 'percent' ? (toNumber(project.contractValue) * toNumber(project.miscValue) / 100) : toNumber(project.miscValue);
+      const received = toNumber(project.received);
+      const receivable = Math.max(0, toNumber(project.contractValue) + miscAmount - received);
+      return { miscAmount, received, receivable };
+    }
+
+    function expenseTotals() {
+      const byCategory = Object.create(null);
+      const byProject = Object.create(null);
+      const categories = ['Labour', 'Materials', 'Equipment & Fuel', 'Transport', 'Permits & Fees', 'Subcontractor', 'Office', 'Miscellaneous'];
+      categories.forEach(category => byCategory[category] = 0);
+
+      state.expenses.forEach(expense => {
+        const amount = toNumber(expense.amount);
+        byCategory[expense.category] = (byCategory[expense.category] || 0) + amount;
+        const projectId = expense.projectId || 'all';
+        if (!byProject[projectId]) {
+          byProject[projectId] = {
+            total: 0,
+            Labour: 0,
+            Materials: 0,
+            'Equipment & Fuel': 0,
+            Transport: 0,
+            'Permits & Fees': 0,
+            Subcontractor: 0,
+            Office: 0,
+            Miscellaneous: 0
+          };
+        }
+        byProject[projectId].total += amount;
+        byProject[projectId][expense.category] = (byProject[projectId][expense.category] || 0) + amount;
+      });
+
+      return { byCategory, byProject };
+    }
+
+    function materialTotals() {
+      const byProject = Object.create(null);
+      state.materials.forEach(material => {
+        const total = toNumber(material.total);
+        const projectId = material.projectId || 'all';
+        if (!byProject[projectId]) byProject[projectId] = { total: 0, due: 0, paid: 0 };
+        byProject[projectId].total += total;
+        byProject[projectId].due += toNumber(material.dueAmount);
+        byProject[projectId].paid += toNumber(material.paidAmount);
+      });
+      return byProject;
+    }
+
+    function calculatePL() {
+      const projectFinance = state.projects.map(project => {
+        const finance = getProjectFinance(project);
+        return { ...project, ...finance };
+      });
+
+      const totals = expenseTotals();
+      const materialByProject = materialTotals();
+
+      const totalContractValue = state.projects.reduce((sum, project) => sum + toNumber(project.contractValue), 0);
+      const totalRevenueReceived = state.projects.reduce((sum, project) => sum + toNumber(project.received), 0);
+      const outstandingReceivables = state.projects.reduce((sum, project) => sum + getProjectFinance(project).receivable, 0);
+      const labourCost = totals.byCategory['Labour'] || 0;
+      const materialsExpense = totals.byCategory['Materials'] || 0;
+      const equipmentFuel = totals.byCategory['Equipment & Fuel'] || 0;
+      const transportCost = totals.byCategory['Transport'] || 0;
+      const subcontractorCost = totals.byCategory['Subcontractor'] || 0;
+      const permitsFees = totals.byCategory['Permits & Fees'] || 0;
+      const officeCost = totals.byCategory['Office'] || 0;
+      const miscellaneous = totals.byCategory['Miscellaneous'] || 0;
+      const materialsLogCost = state.materials.reduce((sum, material) => sum + toNumber(material.total), 0);
+      const materialsDueTotal = state.materials.reduce((sum, material) => sum + toNumber(material.dueAmount), 0);
+      const materialsPaidTotal = state.materials.reduce((sum, material) => sum + toNumber(material.paidAmount), 0);
+      const materialsCost = materialsLogCost + materialsExpense;
+      const totalDirectCosts = labourCost + materialsCost + equipmentFuel + transportCost + subcontractorCost;
+      const grossProfit = totalRevenueReceived - totalDirectCosts;
+      const grossMarginPct = totalRevenueReceived > 0 ? (grossProfit / totalRevenueReceived) * 100 : 0;
+      const overheadCosts = permitsFees + officeCost + miscellaneous;
+      const netProfit = grossProfit - overheadCosts;
+      const netMarginPct = totalRevenueReceived > 0 ? (netProfit / totalRevenueReceived) * 100 : 0;
+      return {
+        totalContractValue,
+        totalRevenueReceived,
+        outstandingReceivables,
+        labourCost,
+        materialsCost,
+        equipmentFuel,
+        transportCost,
+        subcontractorCost,
+        permitsFees,
+        officeCost,
+        miscellaneous,
+        totalDirectCosts,
+        grossProfit,
+        grossMarginPct,
+        overheadCosts,
+        netProfit,
+        netMarginPct,
+        projectFinance,
+        materialByProject,
+        materialsDueTotal,
+        materialsPaidTotal,
+        expenseByCategory: totals.byCategory,
+        expenseByProject: totals.byProject
+      };
+    }
+
+    function renderNav() {
+      const sidebarNav = document.getElementById('sidebarNav');
+      const mobileNav = document.getElementById('mobileNav');
+      sidebarNav.innerHTML = '';
+      mobileNav.innerHTML = '';
+      NAV_ITEMS.forEach(item => {
+        const sidebarBtn = document.createElement('button');
+        sidebarBtn.className = 'nav-btn';
+        sidebarBtn.textContent = item.label;
+        sidebarBtn.dataset.nav = item.id;
+        sidebarBtn.addEventListener('click', () => showPage(item.id));
+        sidebarNav.appendChild(sidebarBtn);
+
+        const mobileBtn = document.createElement('button');
+        mobileBtn.className = 'nav-btn';
+        mobileBtn.textContent = item.label;
+        mobileBtn.dataset.nav = item.id;
+        mobileBtn.addEventListener('click', () => showPage(item.id));
+        mobileNav.appendChild(mobileBtn);
+      });
+    }
+
+    function renderDashboard() {
+      const summary = calculatePL();
+      const activeProjects = state.projects.filter(project => project.status === 'Active').length;
+      const cards = [
+        { label: 'Total Revenue', value: money(summary.totalRevenueReceived), note: 'From project receipts', tone: 'primary' },
+        { label: 'Total Expenses', value: money(summary.totalDirectCosts + summary.overheadCosts), note: 'Expenses + materials', tone: 'warn' },
+        { label: 'Material Due', value: money(summary.materialsDueTotal), note: 'Unpaid material purchases', tone: summary.materialsDueTotal > 0 ? 'danger' : 'primary' },
+        { label: 'Gross Profit', value: money(summary.grossProfit), note: `${summary.grossMarginPct.toFixed(1)}% gross margin`, tone: summary.grossProfit >= 0 ? 'success' : 'danger' },
+        { label: 'Active Projects', value: String(activeProjects), note: `${state.projects.length} total projects`, tone: 'primary' },
+        { label: 'Outstanding Receivables', value: money(summary.outstandingReceivables), note: 'Uncollected contract value', tone: 'warn' }
+      ];
+      document.getElementById('dashboardCards').innerHTML = cards.map(card => `
+        <div class="card summary-card" data-card="${card.label}">
+          <div class="summary-label">${card.label}</div>
+          <p class="summary-value">${card.value}</p>
+          <div class="summary-note">${card.note}</div>
+          <div class="mini-meta"><span class="badge ${card.tone}">${card.label}</span></div>
+        </div>
+      `).join('');
+
+      // wire click handlers for quick drill-downs
+      document.querySelectorAll('#dashboardCards .summary-card').forEach(cardEl => {
+        cardEl.style.cursor = 'pointer';
+        cardEl.addEventListener('click', () => {
+          const key = cardEl.dataset.card;
+          if (key === 'Total Expenses') {
+            showPage('expensesPage');
+            // ensure Expenses shows By Project view
+            const btn = document.querySelector('#expenseViewToggle [data-exp-view="project"]');
+            if (btn) btn.click();
+          } else if (key === 'Material Due') {
+            showPage('materialsPage');
+          } else if (key === 'Outstanding Receivables') {
+            showPage('projectsPage');
+          }
+        });
+      });
+    }
+
+    function renderProjectOptions() {
+      const options = state.projects.map(project => `<option value="${project.id}">${project.name}</option>`).join('');
+      const empty = '<option value="">No projects yet</option>';
+      const projectSelects = [document.getElementById('expenseProject'), document.getElementById('materialProject')];
+      projectSelects.forEach(select => {
+        if (!select) return;
+        select.innerHTML = state.projects.length ? `<option value="">Select project</option>${options}` : empty;
+        if (select.value && !state.projects.some(project => project.id === select.value)) select.value = '';
+      });
+    }
+
+    function renderProjects() {
+      renderProjectOptions();
+      const summary = calculatePL();
+      const totalProjects = state.projects.length;
+      const totalContract = summary.totalContractValue;
+      const totalReceivable = summary.outstandingReceivables;
+      const totalsHtml = [
+        `<span class="pill">Projects: ${totalProjects}</span>`,
+        `<span class="pill">Contract: ${money(totalContract)}</span>`,
+        `<span class="pill">Receivables: ${money(totalReceivable)}</span>`
+      ].join('');
+      document.getElementById('projectTotalsPills').innerHTML = totalsHtml;
+
+      const list = document.getElementById('projectList');
+      if (!state.projects.length) {
+        list.innerHTML = '<div class="muted">No projects added yet. Use the form to create the first project.</div>';
+        return;
+      }
+
+      list.innerHTML = summary.projectFinance.map(project => {
+        const statusClass = project.status === 'Active' ? 'success' : project.status === 'Completed' ? 'primary' : project.status === 'On Hold' ? 'warn' : 'danger';
+        return `
+          <article class="card">
+            <div class="pill-line">
+              <span class="badge ${statusClass}">${project.status}</span>
+              <span class="badge">${project.type}</span>
+            </div>
+            <h4 style="margin:12px 0 8px;">${project.name}</h4>
+            <div class="muted">${project.location}</div>
+            <div class="divider"></div>
+            <div class="stack">
+              <div class="pill-line">
+                <span class="pill">Contract: ${money(project.contractValue)}</span>
+                <span class="pill">Misc: ${money(project.miscAmount)}</span>
+              </div>
+              <div class="pill-line">
+                <span class="pill">Received: ${money(project.received)}</span>
+                <span class="pill">Due: ${money(project.receivable)}</span>
+              </div>
+              <div class="muted">${safeDate(project.startDate)} to ${safeDate(project.endDate)}</div>
+              <div class="muted">${project.notes || 'No notes yet.'}</div>
+            </div>
+            <div class="card-actions no-print">
+              <button class="btn secondary" data-edit-project="${project.id}">Edit</button>
+              <button class="btn danger" data-delete-project="${project.id}">Delete</button>
+              <button class="btn" data-invoice-project="${project.id}">Print Invoice</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      list.querySelectorAll('[data-edit-project]').forEach(button => button.addEventListener('click', () => loadProjectForEdit(button.dataset.editProject)));
+      list.querySelectorAll('[data-delete-project]').forEach(button => button.addEventListener('click', () => deleteProject(button.dataset.deleteProject)));
+      list.querySelectorAll('[data-invoice-project]').forEach(button => button.addEventListener('click', () => printInvoice(button.dataset.invoiceProject)));
+    }
+
+    function renderExpenses() {
+      renderProjectOptions();
+      const summary = calculatePL();
+      const totalExpense = summary.totalDirectCosts + summary.overheadCosts;
+      document.getElementById('expenseSummaryCards').innerHTML = [
+        { label: 'All Expenses', value: money(totalExpense) },
+        { label: 'Labour', value: money(summary.expenseByCategory['Labour'] || 0) },
+        { label: 'Materials', value: money(summary.expenseByCategory['Materials'] || 0) }
+      ].map(item => `
+        <div class="card summary-card">
+          <div class="summary-label">${item.label}</div>
+          <p class="summary-value">${item.value}</p>
+        </div>
+      `).join('');
+
+      const projectRows = state.projects.length ? state.projects.map(project => {
+        const buckets = summary.expenseByProject[project.id] || { total: 0, Labour: 0, Materials: 0, 'Equipment & Fuel': 0, Transport: 0, 'Permits & Fees': 0, Subcontractor: 0, Office: 0, Miscellaneous: 0 };
+        return `
+          <tr>
+            <td>${project.name}</td>
+            <td>${money(buckets.total)}</td>
+            <td>${money(buckets.Labour)}</td>
+            <td>${money(buckets.Materials)}</td>
+            <td>${money(buckets['Equipment & Fuel'])}</td>
+            <td>${money(buckets.Transport)}</td>
+            <td>${money(buckets['Permits & Fees'])}</td>
+            <td>${money(buckets.Subcontractor)}</td>
+            <td>${money(buckets.Office)}</td>
+            <td>${money(buckets.Miscellaneous)}</td>
+          </tr>
+        `;
+      }).join('') : '<tr><td colspan="10" class="muted">Add a project first.</td></tr>';
+      document.getElementById('expenseByProject').innerHTML = projectRows;
+
+      const categoryRows = ['Labour', 'Materials', 'Equipment & Fuel', 'Transport', 'Permits & Fees', 'Subcontractor', 'Office', 'Miscellaneous'].map(category => `
+        <tr><td>${category}</td><td>${money(summary.expenseByCategory[category] || 0)}</td></tr>
+      `).join('');
+      document.getElementById('expenseByCategory').innerHTML = categoryRows;
+    }
+
+    function renderMaterials() {
+      renderProjectOptions();
+      const summary = calculatePL();
+      document.getElementById('materialSummaryCards').innerHTML = [
+        { label: 'Material Purchases', value: money(state.materials.reduce((sum, material) => sum + toNumber(material.total), 0)) },
+        { label: 'Due Amount', value: money(state.materials.reduce((sum, material) => sum + toNumber(material.dueAmount), 0)) },
+        { label: 'Paid Amount', value: money(state.materials.reduce((sum, material) => sum + toNumber(material.paidAmount), 0)) },
+        { label: 'Projects Linked', value: String(Object.keys(summary.materialByProject).length) }
+      ].map(item => `
+        <div class="card summary-card">
+          <div class="summary-label">${item.label}</div>
+          <p class="summary-value">${item.value}</p>
+        </div>
+      `).join('');
+
+      const rows = state.projects.length ? state.projects.map(project => {
+        const buckets = summary.materialByProject[project.id] || { total: 0, due: 0, paid: 0 };
+        return `
+          <tr>
+            <td>${project.name}</td>
+            <td>${money(buckets.total)}</td>
+            <td>${money(buckets.due)}</td>
+            <td>${money(buckets.paid)}</td>
+          </tr>
+        `;
+      }).join('') : '<tr><td colspan="4" class="muted">Add a project first.</td></tr>';
+      document.getElementById('materialByProject').innerHTML = rows;
+    }
+
+    function renderProfit() {
+      const summary = calculatePL();
+      const plCards = [
+        { label: 'Total Contract Value', value: money(summary.totalContractValue) },
+        { label: 'Total Revenue Received', value: money(summary.totalRevenueReceived) },
+        { label: 'Outstanding Receivables', value: money(summary.outstandingReceivables) }
+      ];
+      document.getElementById('plCards').innerHTML = plCards.map(card => `
+        <div class="card summary-card">
+          <div class="summary-label">${card.label}</div>
+          <p class="summary-value">${card.value}</p>
+        </div>
+      `).join('');
+
+      const rows = [
+        ['Total Contract Value', summary.totalContractValue],
+        ['Total Revenue Received', summary.totalRevenueReceived],
+        ['Outstanding Receivables', summary.outstandingReceivables],
+        ['Labour Cost', summary.labourCost],
+        ['Materials Cost', summary.materialsCost],
+        ['Equipment & Fuel Cost', summary.equipmentFuel],
+        ['Subcontractor Cost', summary.subcontractorCost],
+        ['Transport Cost', summary.transportCost],
+        ['Total Direct Costs', summary.totalDirectCosts],
+        ['Gross Profit', summary.grossProfit],
+        ['Gross Margin %', `${summary.grossMarginPct.toFixed(2)}%`],
+        ['Overhead Costs', summary.overheadCosts],
+        ['Net Profit', summary.netProfit],
+        ['Net Margin %', `${summary.netMarginPct.toFixed(2)}%`]
+      ].map(([label, value]) => `
+        <tr>
+          <td>${label}</td>
+          <td class="right">${typeof value === 'string' ? value : money(value)}</td>
+        </tr>
+      `).join('');
+      document.getElementById('plRows').innerHTML = rows;
+    }
+
+    function renderEstimate() {
+      const rowsEl = document.getElementById('estimateRows');
+      const totalPct = estimateState.rows.reduce((sum, row) => sum + toNumber(row.pct), 0);
+      const contractValue = toNumber(document.getElementById('estimateContract').value || estimateState.contractValue);
+      estimateState.contractValue = contractValue;
+      estimateState.projectName = document.getElementById('estimateProjectName').value;
+      estimateState.projectType = document.getElementById('estimateProjectType').value;
+      estimateState.whatIf = document.getElementById('estimateWhatIf').value;
+
+      const rowsHtml = estimateState.rows.map((row, index) => {
+        const amount = contractValue * toNumber(row.pct) / 100;
+        row.amount = amount;
+        return `
+          <div class="calc-row">
+            <div class="category">${row.key}</div>
+            <input class="small-input" data-est-pct="${index}" type="number" min="0" step="0.01" value="${row.pct}">
+            <input class="small-input" data-est-amt="${index}" type="number" min="0" step="0.01" value="${amount.toFixed(2)}">
+            <input data-est-range="${index}" type="range" min="0" max="100" step="0.1" value="${row.pct}">
+          </div>
+        `;
+      }).join('');
+      rowsEl.innerHTML = rowsHtml;
+
+      rowsEl.querySelectorAll('[data-est-pct]').forEach(input => {
+        input.oninput = () => {
+          const index = Number(input.dataset.estPct);
+          estimateState.rows[index].pct = toNumber(input.value);
+          syncEstimateControls(index);
+          renderEstimate();
+        };
+      });
+      rowsEl.querySelectorAll('[data-est-amt]').forEach(input => {
+        input.oninput = () => {
+          const index = Number(input.dataset.estAmt);
+          estimateState.rows[index].pct = contractValue > 0 ? (toNumber(input.value) / contractValue) * 100 : 0;
+          syncEstimateControls(index);
+          renderEstimate();
+        };
+      });
+      rowsEl.querySelectorAll('[data-est-range]').forEach(input => {
+        input.oninput = () => {
+          const index = Number(input.dataset.estRange);
+          estimateState.rows[index].pct = toNumber(input.value);
+          syncEstimateControls(index);
+          renderEstimate();
+        };
+      });
+
+      const totalCost = estimateState.rows.reduce((sum, row) => sum + contractValue * toNumber(row.pct) / 100, 0);
+      const profit = contractValue - totalCost;
+      const profitPct = contractValue > 0 ? (profit / contractValue) * 100 : 0;
+      document.getElementById('estimateTotalCost').textContent = money(totalCost);
+      document.getElementById('estimateProfit').textContent = money(profit);
+      document.getElementById('estimateTotalPct').textContent = `${totalPct.toFixed(2)}%`;
+      document.getElementById('estimateProfitPct').textContent = `${profitPct.toFixed(2)}%`;
+      document.getElementById('estimateSummaryPills').innerHTML = [
+        `<span class="pill">Contract: ${money(contractValue)}</span>`,
+        `<span class="pill">What if: ${estimateState.whatIf === 'on' ? 'On' : 'Off'}</span>`,
+        `<span class="pill">Project: ${estimateState.projectName || 'Untitled'}</span>`
+      ].join('');
+    }
+
+    function syncEstimateControls(index) {
+      const row = estimateState.rows[index];
+      const contractValue = toNumber(document.getElementById('estimateContract').value || estimateState.contractValue);
+      const amount = contractValue * toNumber(row.pct) / 100;
+      const pctInput = document.querySelector(`[data-est-pct="${index}"]`);
+      const amtInput = document.querySelector(`[data-est-amt="${index}"]`);
+      const rangeInput = document.querySelector(`[data-est-range="${index}"]`);
+      if (pctInput) pctInput.value = row.pct.toFixed(2).replace(/\.00$/, '');
+      if (amtInput) amtInput.value = amount.toFixed(2);
+      if (rangeInput) rangeInput.value = row.pct.toFixed(2).replace(/\.00$/, '');
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderProjects();
+      renderExpenses();
+      renderMaterials();
+      renderProfit();
+      renderEstimate();
+    }
+
+    function resetProjectForm() {
+      document.getElementById('projectForm').reset();
+      document.getElementById('projectId').value = '';
+      document.getElementById('projectFormTitle').textContent = 'Add Project';
+      document.getElementById('projectSaveBtn').textContent = 'Save Project';
+      document.getElementById('projectStatus').value = 'Active';
+      document.getElementById('projectType').value = 'Road';
+      document.getElementById('projectMiscMode').value = 'amount';
+      document.getElementById('projectReceived').value = '0';
+      document.getElementById('projectMisc').value = '0';
+    }
+
+    function resetExpenseForm() {
+      document.getElementById('expenseForm').reset();
+      document.getElementById('expenseId').value = '';
+      document.getElementById('expenseFormTitle').textContent = 'Add Expense';
+      document.getElementById('expenseSaveBtn').textContent = 'Save Expense';
+      document.getElementById('expenseDate').value = new Date().toISOString().slice(0, 10);
+    }
+
+    function resetMaterialForm() {
+      document.getElementById('materialForm').reset();
+      document.getElementById('materialId').value = '';
+      document.getElementById('materialFormTitle').textContent = 'Add Material Purchase';
+      document.getElementById('materialSaveBtn').textContent = 'Save Material';
+      document.getElementById('materialDate').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('materialPaymentStatus').value = 'Paid';
+      document.getElementById('materialPaid').value = '0';
+      document.getElementById('materialDue').value = '0';
+      document.getElementById('materialTotal').value = '0';
+    }
+
+    function loadProjectForEdit(id) {
+      const project = state.projects.find(item => item.id === id);
+      if (!project) return;
+      document.getElementById('projectFormTitle').textContent = 'Edit Project';
+      document.getElementById('projectSaveBtn').textContent = 'Update Project';
+      document.getElementById('projectId').value = project.id;
+      document.getElementById('projectName').value = project.name;
+      document.getElementById('projectLocation').value = project.location;
+      document.getElementById('projectType').value = project.type;
+      document.getElementById('projectStatus').value = project.status;
+      document.getElementById('projectStart').value = project.startDate || '';
+      document.getElementById('projectEnd').value = project.endDate || '';
+      document.getElementById('projectContract').value = project.contractValue;
+      document.getElementById('projectReceived').value = project.received || 0;
+      document.getElementById('projectMiscMode').value = project.miscMode || 'amount';
+      document.getElementById('projectMisc').value = project.miscValue || 0;
+      document.getElementById('projectNotes').value = project.notes || '';
+      showPage('projectsPage');
+    }
+
+    function deleteProject(id) {
+      if (!confirm('Delete this project and keep related logs?')) return;
+      state.projects = state.projects.filter(project => project.id !== id);
+      saveState();
+      renderAll();
+    }
+
+    function loadExpenseForEdit(id) {
+      const expense = state.expenses.find(item => item.id === id);
+      if (!expense) return;
+      document.getElementById('expenseFormTitle').textContent = 'Edit Expense';
+      document.getElementById('expenseSaveBtn').textContent = 'Update Expense';
+      document.getElementById('expenseId').value = expense.id;
+      document.getElementById('expenseDate').value = expense.date;
+      document.getElementById('expenseProject').value = expense.projectId;
+      document.getElementById('expenseCategory').value = expense.category;
+      document.getElementById('expenseAmount').value = expense.amount;
+      document.getElementById('expenseVendor').value = expense.vendor || '';
+      document.getElementById('expenseMode').value = expense.paymentMode || 'Cash';
+      document.getElementById('expenseNotes').value = expense.notes || '';
+      showPage('expensesPage');
+    }
+
+    function deleteExpense(id) {
+      state.expenses = state.expenses.filter(expense => expense.id !== id);
+      saveState();
+      renderAll();
+    }
+
+    function loadMaterialForEdit(id) {
+      const material = state.materials.find(item => item.id === id);
+      if (!material) return;
+      document.getElementById('materialFormTitle').textContent = 'Edit Material Purchase';
+      document.getElementById('materialSaveBtn').textContent = 'Update Material';
+      document.getElementById('materialId').value = material.id;
+      document.getElementById('materialDate').value = material.date;
+      document.getElementById('materialProject').value = material.projectId;
+      document.getElementById('materialName').value = material.name;
+      document.getElementById('materialQty').value = material.quantity;
+      document.getElementById('materialUnit').value = material.unit;
+      document.getElementById('materialRate').value = material.rate;
+      document.getElementById('materialTotal').value = material.total;
+      document.getElementById('materialSupplier').value = material.supplier || '';
+      document.getElementById('materialBill').value = material.billNumber || '';
+      document.getElementById('materialPaymentStatus').value = material.paymentStatus || 'Paid';
+      document.getElementById('materialPaid').value = material.paidAmount || 0;
+      document.getElementById('materialDue').value = material.dueAmount || 0;
+      document.getElementById('materialNotes').value = material.notes || '';
+      showPage('materialsPage');
+    }
+
+    function deleteMaterial(id) {
+      state.materials = state.materials.filter(material => material.id !== id);
+      saveState();
+      renderAll();
+    }
+
+    function calculateMiscFromForm() {
+      const contract = toNumber(document.getElementById('projectContract').value);
+      const mode = document.getElementById('projectMiscMode').value;
+      const value = toNumber(document.getElementById('projectMisc').value);
+      return mode === 'percent' ? contract * value / 100 : value;
+    }
+
+    function buildPrintWindow(title, bodyHtml) {
+      const popup = window.open('', '_blank', 'width=1100,height=900');
+      if (!popup) return;
+      popup.document.open();
+      popup.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111827; }
+            h1, h2, h3, p { margin: 0; }
+            .head { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+            .brand { font-size: 1.4rem; font-weight: 800; }
+            .muted { color: #6b7280; }
+            .box { border: 1px solid #d1d5db; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+            .grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+            .row:last-child { border-bottom: 0; }
+            .pill { display: inline-block; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 999px; margin-right: 8px; margin-bottom: 8px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th, td { border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; vertical-align: top; }
+            th { background: #f3f4f6; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          ${bodyHtml}
+          <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 250); };<\/script>
+        </body>
+        </html>
+      `);
+      popup.document.close();
+    }
+
+    function printInvoice(projectId) {
+      const project = state.projects.find(item => item.id === projectId);
+      if (!project) return;
+      const summary = calculatePL();
+      const finance = getProjectFinance(project);
+      const relatedExpenses = state.expenses.filter(expense => expense.projectId === projectId);
+      const relatedMaterials = state.materials.filter(material => material.projectId === projectId);
+      const expenseTotal = relatedExpenses.reduce((sum, expense) => sum + toNumber(expense.amount), 0);
+      const materialTotal = relatedMaterials.reduce((sum, material) => sum + toNumber(material.total), 0);
+      buildPrintWindow(`Invoice - ${project.name}`, `
+        <div class="head">
+          <div>
+            <div class="brand">Tender Manager</div>
+            <p class="muted">Invoice / Project Statement</p>
+          </div>
+          <div class="muted">Generated ${new Date().toLocaleString('en-IN')}</div>
+        </div>
+        <div class="box">
+          <h2>${project.name}</h2>
+          <p class="muted">${project.location}</p>
+          <div style="margin-top:10px;">
+            <span class="pill">${project.type}</span>
+            <span class="pill">${project.status}</span>
+            <span class="pill">Contract: ${money(project.contractValue)}</span>
+            <span class="pill">Misc: ${money(finance.miscAmount)}</span>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="box"><strong>Received</strong><div style="margin-top:8px; font-size:1.2rem;">${money(finance.received)}</div></div>
+          <div class="box"><strong>Outstanding</strong><div style="margin-top:8px; font-size:1.2rem;">${money(finance.receivable)}</div></div>
+        </div>
+        <div class="box">
+          <div class="row"><span>Expenses logged</span><strong>${money(expenseTotal)}</strong></div>
+          <div class="row"><span>Material purchases</span><strong>${money(materialTotal)}</strong></div>
+          <div class="row"><span>Related entries</span><strong>${relatedExpenses.length + relatedMaterials.length}</strong></div>
+        </div>
+        <div class="box">
+          <h3>Notes</h3>
+          <p class="muted" style="margin-top:8px; line-height:1.5;">${project.notes || 'No notes added.'}</p>
+        </div>
+      `);
+    }
+
+    function printEstimate() {
+      const contractValue = toNumber(document.getElementById('estimateContract').value || estimateState.contractValue);
+      const projectName = document.getElementById('estimateProjectName').value || 'Untitled Estimate';
+      const projectType = document.getElementById('estimateProjectType').value;
+      const rows = estimateState.rows.map(row => ({ ...row, amount: contractValue * toNumber(row.pct) / 100 }));
+      const totalCost = rows.reduce((sum, row) => sum + row.amount, 0);
+      const profit = contractValue - totalCost;
+      const totalPct = rows.reduce((sum, row) => sum + toNumber(row.pct), 0);
+      buildPrintWindow(`Estimate - ${projectName}`, `
+        <div class="head">
+          <div>
+            <div class="brand">Tender Manager</div>
+            <p class="muted">Estimate Sheet</p>
+          </div>
+          <div class="muted">Generated ${new Date().toLocaleString('en-IN')}</div>
+        </div>
+        <div class="box">
+          <h2>${projectName}</h2>
+          <p class="muted">${projectType}</p>
+          <div style="margin-top:10px;">
+            <span class="pill">Contract Value: ${money(contractValue)}</span>
+            <span class="pill">What if: ${document.getElementById('estimateWhatIf').value === 'on' ? 'On' : 'Off'}</span>
+          </div>
+        </div>
+        <div class="box">
+          <table>
+            <thead><tr><th>Category</th><th>Percent</th><th>Amount</th></tr></thead>
+            <tbody>
+              ${rows.map(row => `<tr><td>${row.key}</td><td>${toNumber(row.pct).toFixed(2)}%</td><td>${money(row.amount)}</td></tr>`).join('')}
+            </tbody>
+            <tfoot>
+              <tr><th>Total</th><th>${totalPct.toFixed(2)}%</th><th>${money(totalCost)}</th></tr>
+              <tr><th>Estimated Profit</th><th colspan="2">${money(profit)}</th></tr>
+            </tfoot>
+          </table>
+        </div>
+      `);
+    }
+
+    function fillDefaults() {
+      document.getElementById('expenseDate').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('materialDate').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('estimateContract').value = estimateState.contractValue;
+      document.getElementById('estimateProjectType').value = 'Road';
+      document.getElementById('estimateWhatIf').value = 'off';
+    }
+
+    function updateMaterialCalc() {
+      const qty = toNumber(document.getElementById('materialQty').value);
+      const rate = toNumber(document.getElementById('materialRate').value);
+      const total = qty * rate;
+      const paid = Math.min(total, toNumber(document.getElementById('materialPaid').value || 0));
+      document.getElementById('materialTotal').value = total.toFixed(2);
+      document.getElementById('materialDue').value = Math.max(0, total - paid).toFixed(2);
+      if (document.getElementById('materialPaymentStatus').value === 'Paid') {
+        document.getElementById('materialPaid').value = total.toFixed(2);
+        document.getElementById('materialDue').value = '0.00';
+      }
+    }
+
+    function updateProjectMiscHint() {
+      const contract = toNumber(document.getElementById('projectContract').value);
+      const mode = document.getElementById('projectMiscMode').value;
+      const input = document.getElementById('projectMisc');
+      input.placeholder = mode === 'percent' ? 'e.g. 2' : 'e.g. 250000';
+      if (mode === 'percent' && input.value === '') input.value = '0';
+      const miscAmount = mode === 'percent' ? contract * toNumber(input.value) / 100 : toNumber(input.value);
+      input.title = `Computed misc amount: ${money(miscAmount)}`;
+    }
+
+    document.getElementById('projectForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const id = document.getElementById('projectId').value || uid('proj');
+      const miscMode = document.getElementById('projectMiscMode').value;
+      const miscValue = toNumber(document.getElementById('projectMisc').value);
+      const project = {
+        id,
+        name: document.getElementById('projectName').value.trim(),
+        location: document.getElementById('projectLocation').value.trim(),
+        type: document.getElementById('projectType').value,
+        status: document.getElementById('projectStatus').value,
+        startDate: document.getElementById('projectStart').value,
+        endDate: document.getElementById('projectEnd').value,
+        contractValue: toNumber(document.getElementById('projectContract').value),
+        received: toNumber(document.getElementById('projectReceived').value),
+        miscMode,
+        miscValue,
+        notes: document.getElementById('projectNotes').value.trim()
+      };
+      const existing = state.projects.findIndex(item => item.id === id);
+      if (existing >= 0) state.projects[existing] = project; else state.projects.unshift(project);
+      saveState();
+      resetProjectForm();
+      renderAll();
+    });
+
+    document.getElementById('expenseForm').addEventListener('submit', event => {
+      event.preventDefault();
+      if (!state.projects.length) return alert('Add a project first.');
+      const id = document.getElementById('expenseId').value || uid('exp');
+      const expense = {
+        id,
+        date: document.getElementById('expenseDate').value,
+        projectId: document.getElementById('expenseProject').value,
+        category: document.getElementById('expenseCategory').value,
+        amount: toNumber(document.getElementById('expenseAmount').value),
+        vendor: document.getElementById('expenseVendor').value.trim(),
+        paymentMode: document.getElementById('expenseMode').value,
+        notes: document.getElementById('expenseNotes').value.trim()
+      };
+      const existing = state.expenses.findIndex(item => item.id === id);
+      if (existing >= 0) state.expenses[existing] = expense; else state.expenses.unshift(expense);
+      saveState();
+      resetExpenseForm();
+      renderAll();
+    });
+
+    document.getElementById('materialForm').addEventListener('submit', event => {
+      event.preventDefault();
+      if (!state.projects.length) return alert('Add a project first.');
+      const total = toNumber(document.getElementById('materialTotal').value);
+      const paid = Math.min(total, toNumber(document.getElementById('materialPaid').value));
+      const id = document.getElementById('materialId').value || uid('mat');
+      const material = {
+        id,
+        date: document.getElementById('materialDate').value,
+        projectId: document.getElementById('materialProject').value,
+        name: document.getElementById('materialName').value.trim(),
+        quantity: toNumber(document.getElementById('materialQty').value),
+        unit: document.getElementById('materialUnit').value,
+        rate: toNumber(document.getElementById('materialRate').value),
+        total,
+        supplier: document.getElementById('materialSupplier').value.trim(),
+        billNumber: document.getElementById('materialBill').value.trim(),
+        paymentStatus: document.getElementById('materialPaymentStatus').value,
+        dueAmount: Math.max(0, total - paid),
+        paidAmount: paid,
+        notes: document.getElementById('materialNotes').value.trim()
+      };
+      const existing = state.materials.findIndex(item => item.id === id);
+      if (existing >= 0) state.materials[existing] = material; else state.materials.unshift(material);
+      saveState();
+      resetMaterialForm();
+      renderAll();
+    });
+
+    document.getElementById('projectCancelBtn').addEventListener('click', () => resetProjectForm());
+    document.getElementById('expenseCancelBtn').addEventListener('click', () => resetExpenseForm());
+    document.getElementById('materialCancelBtn').addEventListener('click', () => resetMaterialForm());
+
+    document.getElementById('materialQty').addEventListener('input', updateMaterialCalc);
+    document.getElementById('materialRate').addEventListener('input', updateMaterialCalc);
+    document.getElementById('materialPaid').addEventListener('input', updateMaterialCalc);
+    document.getElementById('materialPaymentStatus').addEventListener('change', updateMaterialCalc);
+
+    document.getElementById('expenseViewToggle').addEventListener('click', event => {
+      const button = event.target.closest('[data-exp-view]');
+      if (!button) return;
+      const view = button.dataset.expView;
+      document.querySelectorAll('#expenseViewToggle .seg-btn').forEach(item => item.classList.toggle('active', item === button));
+      document.getElementById('expenseProjectPanel').hidden = view !== 'project';
+      document.getElementById('expenseCategoryPanel').hidden = view !== 'category';
+    });
+
+    document.getElementById('projectMiscMode').addEventListener('change', updateProjectMiscHint);
+    document.getElementById('projectContract').addEventListener('input', updateProjectMiscHint);
+    document.getElementById('projectMisc').addEventListener('input', updateProjectMiscHint);
+
+    document.getElementById('estimateContract').addEventListener('input', renderEstimate);
+    document.getElementById('estimateProjectName').addEventListener('input', renderEstimate);
+    document.getElementById('estimateProjectType').addEventListener('change', renderEstimate);
+    document.getElementById('estimateWhatIf').addEventListener('change', renderEstimate);
+    document.getElementById('printEstimateBtn').addEventListener('click', printEstimate);
+
+    document.getElementById('resetDemoBtn').addEventListener('click', () => {
+      if (!confirm('Clear all stored projects, expenses, and materials?')) return;
+      state.projects = [];
+      state.expenses = [];
+      state.materials = [];
+      saveState();
+      resetProjectForm();
+      resetExpenseForm();
+      resetMaterialForm();
+      renderAll();
+      showPage('dashboardPage');
+    });
+
+    // export / import UI handlers
+    document.getElementById('exportBtn').addEventListener('click', exportStateToFile);
+    const importBtn = document.getElementById('importBtn');
+    const importFile = document.getElementById('importFile');
+    importBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if (f) handleImportFile(f);
+      importFile.value = '';
+    });
+
+    document.addEventListener('click', event => {
+      const navButton = event.target.closest('[data-nav]');
+      if (navButton) showPage(navButton.dataset.nav);
+      const editProject = event.target.closest('[data-edit-project]');
+      if (editProject) loadProjectForEdit(editProject.dataset.editProject);
+      const deleteProjectBtn = event.target.closest('[data-delete-project]');
+      if (deleteProjectBtn) deleteProject(deleteProjectBtn.dataset.deleteProject);
+      const invoiceProjectBtn = event.target.closest('[data-invoice-project]');
+      if (invoiceProjectBtn) printInvoice(invoiceProjectBtn.dataset.invoiceProject);
+    });
+
+    renderNav();
+    fillDefaults();
+    resetProjectForm();
+    resetExpenseForm();
+    resetMaterialForm();
+    updateProjectMiscHint();
+    updateMaterialCalc();
+    renderAll();
+    showPage('dashboardPage');
+    // register service worker for PWA/offline support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(err => console.warn('SW registration failed', err));
+    }
+  </script>
+</body>
+</html>
