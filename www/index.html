@@ -805,7 +805,7 @@
                 <div class="field span-6"><label>Bill amount, before GST (₹)</label><input id="billAmount" type="number" min="0" step="0.01" required value="0" /></div>
                 <div class="field span-3"><label>Hold amount (₹)</label><input id="billHold" type="number" min="0" step="0.01" value="0" /></div>
                 <div class="field span-3"><label>Release amount (₹)</label><input id="billRelease" type="number" min="0" step="0.01" value="0" /></div>
-                <div class="field span-3"><label>Manual site cost (₹)</label><input id="billSiteCost" type="number" min="0" step="0.01" value="0" /><div class="hint">Use Site Costs to link itemized costs to this bill.</div></div>
+                <div class="field span-3"><label>Site cost (₹)</label><input id="billSiteCost" type="number" min="0" step="0.01" value="0" /></div>
                 <div class="field span-3"><label>RED commission %</label><input id="billRedRate" type="number" min="0" step="0.01" value="10.5" /></div>
                 <div class="field span-3"><label>CDO commission %</label><input id="billCdoRate" type="number" min="0" step="0.01" value="5" /></div>
                 <div class="field span-3"><label>VIP % of total</label><input id="billVipRate" type="number" min="0" step="0.01" value="10" /></div>
@@ -2089,10 +2089,6 @@
     document.getElementById('materialCancelBtn').addEventListener('click', () => resetMaterialForm());
     document.getElementById('billCancelBtn').addEventListener('click', resetBillForm);
     document.getElementById('siteCostCancelBtn').addEventListener('click', resetSiteCostForm);
-    document.getElementById('siteCostBill').addEventListener('change', event => {
-      const bill = state.bills.find(item => item.id === event.target.value);
-      if (bill) document.getElementById('siteCostProject').value = bill.projectId;
-    });
     document.getElementById('printBillBtn').addEventListener('click', () => printRunningBill(document.getElementById('billId').value));
 
     document.getElementById('materialQty').addEventListener('input', updateMaterialCalc);
@@ -2121,7 +2117,7 @@
     document.getElementById('printEstimateBtn').addEventListener('click', printEstimate);
 
     document.getElementById('resetDemoBtn').addEventListener('click', () => {
-      if (!confirm('Clear all stored projects, site costs, and running bills?')) return;
+      if (!confirm('Clear all stored projects, expenses, and materials?')) return;
       state.projects = [];
       state.expenses = [];
       state.materials = [];
