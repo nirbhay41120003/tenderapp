@@ -4,6 +4,7 @@
   "description": "Tender Manager PWA — single-file contractor app",
   "scripts": {
     "prepare-www": "node scripts/prepare.js",
+    "build": "npm run prepare-www",
     "serve": "npx http-server www -p 8080",
     "start": "npm run prepare-www && npm run serve"
   },

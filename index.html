@@ -88,6 +88,7 @@
 
     .page { display: none; animation: fadeIn .18s ease; }
     .page.active { display: block; }
+    [hidden] { display: none !important; }
 
     @keyframes fadeIn { from { opacity: .2; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -361,7 +362,7 @@
         <div class="topbar">
           <div>
             <h2>Dashboard</h2>
-            <p>Live summary cards pulled from projects, expenses, and materials.</p>
+            <p>Your projects, site spending, and running-bill position in one place.</p>
           </div>
           <div class="actions no-print">
             <button class="btn secondary" id="resetDemoBtn">Clear All Data</button>
@@ -388,14 +389,14 @@
             <div class="card-actions"><button class="btn" data-nav="projectsPage">Open Projects</button></div>
           </div>
           <div class="card">
-            <h4 class="panel-title">Expenses</h4>
-            <p class="muted">Log labour, materials, fuel, transport, permits, and office costs.</p>
-            <div class="card-actions"><button class="btn" data-nav="expensesPage">Open Expenses</button></div>
+            <h4 class="panel-title">Site Costs</h4>
+            <p class="muted">Log labour, materials, fuel, and all other site spending in one simple list.</p>
+            <div class="card-actions"><button class="btn" data-nav="siteCostsPage">Open Site Costs</button></div>
           </div>
           <div class="card">
-            <h4 class="panel-title">Materials</h4>
-            <p class="muted">Record purchases with due and paid values for each bill.</p>
-            <div class="card-actions"><button class="btn" data-nav="materialsPage">Open Materials</button></div>
+            <h4 class="panel-title">Running Bills</h4>
+            <p class="muted">Calculate RA bill deductions, commissions, balance, and site profit.</p>
+            <div class="card-actions"><button class="btn" data-nav="billsPage">Open Running Bills</button></div>
           </div>
         </div>
       </section>
@@ -493,7 +494,33 @@
         </div>
       </section>
 
-      <section class="page" id="expensesPage">
+      <section class="page" id="siteCostsPage">
+        <div class="topbar">
+          <div><h2>Site Costs</h2><p>One simple register for every cost spent at site.</p></div>
+          <div class="actions no-print"><button class="btn secondary" data-nav="dashboardPage">Back to Dashboard</button></div>
+        </div>
+        <div class="split">
+          <div class="card">
+            <h3 class="panel-title" id="siteCostFormTitle">Add Site Cost</h3>
+            <form id="siteCostForm" class="stack">
+              <input type="hidden" id="siteCostId" />
+              <div class="form-grid">
+                <div class="field span-4"><label>Date</label><input id="siteCostDate" type="date" required /></div>
+                <div class="field span-8"><label>Project</label><select id="siteCostProject" required></select></div>
+                <div class="field span-8"><label>Running bill (optional)</label><select id="siteCostBill"></select><div class="hint">Link it to show this cost automatically in that bill's profit.</div></div>
+                <div class="field span-4"><label>Amount (₹)</label><input id="siteCostAmount" type="number" min="0" step="0.01" required /></div>
+                <div class="field span-12"><label>Description</label><input id="siteCostDescription" required placeholder="Labour, diesel, aggregate, transport..." /></div>
+                <div class="field span-12"><label>Notes</label><textarea id="siteCostNotes" placeholder="Vendor, payment details, or remark"></textarea></div>
+              </div>
+              <div class="card-actions no-print"><button class="btn" type="submit" id="siteCostSaveBtn">Save Site Cost</button><button class="btn secondary" type="button" id="siteCostCancelBtn">Cancel</button></div>
+            </form>
+          </div>
+          <div class="card"><h3 class="panel-title">Site Cost Summary</h3><div class="report-grid" id="siteCostSummary"></div><div class="divider"></div><div class="table-wrap"><table><thead><tr><th>Project</th><th>Total site cost</th></tr></thead><tbody id="siteCostByProject"></tbody></table></div></div>
+        </div>
+        <div class="card table-wrap" style="margin-top:20px;"><table><thead><tr><th>Date</th><th>Project</th><th>Running bill</th><th>Description</th><th>Amount</th><th class="no-print">Actions</th></tr></thead><tbody id="siteCostList"></tbody></table></div>
+      </section>
+
+      <section class="page" id="expensesPage" hidden>
         <div class="topbar">
           <div>
             <h2>Expenses</h2>
@@ -608,7 +635,7 @@
         </div>
       </section>
 
-      <section class="page" id="materialsPage">
+      <section class="page" id="materialsPage" hidden>
         <div class="topbar">
           <div>
             <h2>Materials</h2>
@@ -721,7 +748,7 @@
         </div>
       </section>
 
-      <section class="page" id="profitPage">
+      <section class="page" id="profitPage" hidden>
         <div class="topbar">
           <div>
             <h2>Profit & Loss</h2>
@@ -754,7 +781,63 @@
         </div>
       </section>
 
-      <section class="page" id="estimatorPage">
+      <section class="page" id="billsPage">
+        <div class="topbar">
+          <div>
+            <h2>Running Bills</h2>
+            <p>Calculate deductions, commissions, contractor balance, and project profit from your RED Bill format.</p>
+          </div>
+          <div class="actions no-print">
+            <button class="btn secondary" data-nav="dashboardPage">Back to Dashboard</button>
+            <button class="btn" id="printBillBtn" type="button">Print Selected Bill</button>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="card">
+            <h3 class="panel-title" id="billFormTitle">Add Running Bill</h3>
+            <form id="billForm" class="stack">
+              <input type="hidden" id="billId" />
+              <div class="form-grid">
+                <div class="field span-4"><label>Date</label><input id="billDate" type="date" required /></div>
+                <div class="field span-4"><label>Invoice / RA bill no.</label><input id="billNumber" required placeholder="e.g. 84" /></div>
+                <div class="field span-4"><label>Project</label><select id="billProject" required></select></div>
+                <div class="field span-6"><label>Bill amount, before GST (₹)</label><input id="billAmount" type="number" min="0" step="0.01" required value="0" /></div>
+                <div class="field span-3"><label>Hold amount (₹)</label><input id="billHold" type="number" min="0" step="0.01" value="0" /></div>
+                <div class="field span-3"><label>Release amount (₹)</label><input id="billRelease" type="number" min="0" step="0.01" value="0" /></div>
+                <div class="field span-3"><label>Manual site cost (₹)</label><input id="billSiteCost" type="number" min="0" step="0.01" value="0" /><div class="hint">Use Site Costs to link itemized costs to this bill.</div></div>
+                <div class="field span-3"><label>RED commission %</label><input id="billRedRate" type="number" min="0" step="0.01" value="10.5" /></div>
+                <div class="field span-3"><label>CDO commission %</label><input id="billCdoRate" type="number" min="0" step="0.01" value="5" /></div>
+                <div class="field span-3"><label>VIP % of total</label><input id="billVipRate" type="number" min="0" step="0.01" value="10" /></div>
+                <div class="field span-12"><details><summary class="muted" style="cursor:pointer;">Edit standard deduction rates (defaults match RED Bill)</summary><div class="form-grid" style="margin-top:12px;"><div class="field span-3"><label>CGST %</label><input id="billCgstRate" type="number" min="0" step="0.01" value="9" /></div><div class="field span-3"><label>SGST %</label><input id="billSgstRate" type="number" min="0" step="0.01" value="9" /></div><div class="field span-3"><label>Security %</label><input id="billSecurityRate" type="number" min="0" step="0.01" value="5" /></div><div class="field span-3"><label>CGST TDS %</label><input id="billCgstTdsRate" type="number" min="0" step="0.01" value="1" /></div><div class="field span-3"><label>SGST TDS %</label><input id="billSgstTdsRate" type="number" min="0" step="0.01" value="1" /></div><div class="field span-3"><label>Income tax %</label><input id="billIncomeTaxRate" type="number" min="0" step="0.01" value="2" /></div><div class="field span-3"><label>L.C. %</label><input id="billLabourCessRate" type="number" min="0" step="0.01" value="1" /></div></div></details></div>
+                <div class="field span-6"><label>Notes</label><textarea id="billNotes" placeholder="Cheque details, retention note, remarks..."></textarea></div>
+              </div>
+              <div class="card-actions no-print">
+                <button class="btn" type="submit" id="billSaveBtn">Save Running Bill</button>
+                <button class="btn secondary" type="button" id="billCancelBtn">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 class="panel-title">Live Calculation</h3>
+            <p class="sub">Standard rates match the supplied RED Bill workbook: 9% CGST, 9% SGST, 5% security, 1% CGST TDS, 1% SGST TDS, 2% income tax, and 1% L.C.</p>
+            <div class="table-wrap">
+              <table><tbody id="billCalculationRows"></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-head"><div><h3>Saved Running Bills</h3><p class="sub">Select a bill to edit or print its statement.</p></div></div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Bill no.</th><th>Project</th><th>Bill amount</th><th>Cheque amount</th><th>Contractor balance</th><th>Site cost</th><th>Net profit</th><th class="no-print">Actions</th></tr></thead>
+            <tbody id="billList"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="estimatorPage" hidden>
         <div class="topbar">
           <div>
             <h2>Estimator</h2>
@@ -839,10 +922,8 @@
     const NAV_ITEMS = [
       { id: 'dashboardPage', label: 'Dashboard' },
       { id: 'projectsPage', label: 'Projects' },
-      { id: 'expensesPage', label: 'Expenses' },
-      { id: 'materialsPage', label: 'Materials' },
-      { id: 'profitPage', label: 'P&L' },
-      { id: 'estimatorPage', label: 'Estimator' }
+      { id: 'siteCostsPage', label: 'Site Costs' },
+      { id: 'billsPage', label: 'Running Bills' },
     ];
 
     const DEFAULT_ESTIMATE = [
@@ -866,15 +947,21 @@
     };
 
     function loadState() {
-      const fallback = { projects: [], expenses: [], materials: [] };
+      const fallback = { projects: [], expenses: [], materials: [], siteCosts: [], bills: [] };
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return fallback;
         const parsed = JSON.parse(raw);
+        const siteCosts = Array.isArray(parsed.siteCosts) ? parsed.siteCosts : [
+          ...(Array.isArray(parsed.expenses) ? parsed.expenses.map(item => ({ id: item.id || uid('legacy_cost'), date: item.date, projectId: item.projectId, description: item.category || 'Site expense', amount: toNumber(item.amount), notes: [item.vendor, item.notes].filter(Boolean).join(' — ') })) : []),
+          ...(Array.isArray(parsed.materials) ? parsed.materials.map(item => ({ id: item.id || uid('legacy_cost'), date: item.date, projectId: item.projectId, description: item.name || 'Material', amount: toNumber(item.total), notes: [item.supplier, item.billNumber, item.notes].filter(Boolean).join(' — ') })) : [])
+        ];
         return {
           projects: Array.isArray(parsed.projects) ? parsed.projects : [],
           expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
-          materials: Array.isArray(parsed.materials) ? parsed.materials : []
+          materials: Array.isArray(parsed.materials) ? parsed.materials : [],
+          siteCosts,
+          bills: Array.isArray(parsed.bills) ? parsed.bills : []
         };
       } catch (error) {
         return fallback;
@@ -957,6 +1044,8 @@
       state.projects = Array.isArray(incoming.projects) ? incoming.projects : [];
       state.expenses = Array.isArray(incoming.expenses) ? incoming.expenses : [];
       state.materials = Array.isArray(incoming.materials) ? incoming.materials : [];
+      state.siteCosts = Array.isArray(incoming.siteCosts) ? incoming.siteCosts : [];
+      state.bills = Array.isArray(incoming.bills) ? incoming.bills : [];
       saveState();
       renderAll();
       alert('Import complete');
@@ -996,11 +1085,9 @@
     function showPage(pageId) {
       document.querySelectorAll('.page').forEach(page => page.classList.toggle('active', page.id === pageId));
       document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.nav === pageId));
-      if (pageId === 'estimatorPage') renderEstimate();
-      if (pageId === 'profitPage') renderProfit();
       if (pageId === 'dashboardPage') renderDashboard();
-      if (pageId === 'expensesPage') renderExpenses();
-      if (pageId === 'materialsPage') renderMaterials();
+      if (pageId === 'siteCostsPage') renderSiteCosts();
+      if (pageId === 'billsPage') renderBills();
       if (pageId === 'projectsPage') renderProjects();
     }
 
@@ -1058,6 +1145,41 @@
         byProject[projectId].paid += toNumber(material.paidAmount);
       });
       return byProject;
+    }
+
+    function siteCostForBill(billId) {
+      return state.siteCosts.reduce((sum, cost) => sum + (cost.billId === billId ? toNumber(cost.amount) : 0), 0);
+    }
+
+    function billWithLinkedCosts(bill) {
+      const linkedCost = siteCostForBill(bill.id);
+      return { ...bill, siteCost: linkedCost || toNumber(bill.siteCost) };
+    }
+
+    function calculateRunningBill(input) {
+      const billAmount = toNumber(input.billAmount);
+      const rate = (name, fallback) => toNumber(input[name] === '' || input[name] == null ? fallback : input[name]) / 100;
+      const cgst = billAmount * rate('cgstRate', 9);
+      const sgst = billAmount * rate('sgstRate', 9);
+      const total = billAmount + cgst + sgst;
+      const security = total * rate('securityRate', 5);
+      const cgstTds = billAmount * rate('cgstTdsRate', 1);
+      const sgstTds = billAmount * rate('sgstTdsRate', 1);
+      const incomeTax = billAmount * rate('incomeTaxRate', 2);
+      const labourCess = billAmount * rate('labourCessRate', 1);
+      const holdAmount = toNumber(input.holdAmount);
+      const releaseAmount = toNumber(input.releaseAmount);
+      const chequeAmount = total - security - cgstTds - sgstTds - incomeTax - labourCess - holdAmount + releaseAmount;
+      const redCommissionBase = chequeAmount - (cgst + sgst - cgstTds - sgstTds);
+      const redCommission = redCommissionBase * toNumber(input.redRate === '' || input.redRate == null ? 10.5 : input.redRate) / 100;
+      const cdoCommissionBase = billAmount;
+      const cdoCommission = cdoCommissionBase * toNumber(input.cdoRate === '' || input.cdoRate == null ? 5 : input.cdoRate) / 100;
+      const balanceAmount = chequeAmount - redCommission - cdoCommission;
+      const contractorGst = cgst + sgst - cgstTds - sgstTds;
+      const vip = total * toNumber(input.vipRate === '' || input.vipRate == null ? 10 : input.vipRate) / 100;
+      const contractorBalance = balanceAmount - contractorGst - vip;
+      const siteCost = toNumber(input.siteCost);
+      return { billAmount, cgst, sgst, total, security, cgstTds, sgstTds, incomeTax, labourCess, holdAmount, releaseAmount, chequeAmount, redCommissionBase, redCommission, cdoCommissionBase, cdoCommission, balanceAmount, contractorGst, vip, contractorBalance, siteCost, netProfit: contractorBalance - siteCost };
     }
 
     function calculatePL() {
@@ -1144,9 +1266,9 @@
       const activeProjects = state.projects.filter(project => project.status === 'Active').length;
       const cards = [
         { label: 'Total Revenue', value: money(summary.totalRevenueReceived), note: 'From project receipts', tone: 'primary' },
-        { label: 'Total Expenses', value: money(summary.totalDirectCosts + summary.overheadCosts), note: 'Expenses + materials', tone: 'warn' },
-        { label: 'Material Due', value: money(summary.materialsDueTotal), note: 'Unpaid material purchases', tone: summary.materialsDueTotal > 0 ? 'danger' : 'primary' },
-        { label: 'Gross Profit', value: money(summary.grossProfit), note: `${summary.grossMarginPct.toFixed(1)}% gross margin`, tone: summary.grossProfit >= 0 ? 'success' : 'danger' },
+        { label: 'Running Bill Profit', value: money(state.bills.reduce((sum, bill) => sum + calculateRunningBill(billWithLinkedCosts(bill)).netProfit, 0)), note: `${state.bills.length} saved bill${state.bills.length === 1 ? '' : 's'}`, tone: 'success' },
+        { label: 'Site Costs', value: money(state.siteCosts.reduce((sum, cost) => sum + toNumber(cost.amount), 0)), note: 'All site spending logged', tone: 'warn' },
+        { label: 'Cheque Expected', value: money(state.bills.reduce((sum, bill) => sum + calculateRunningBill(billWithLinkedCosts(bill)).chequeAmount, 0)), note: 'Across saved running bills', tone: 'primary' },
         { label: 'Active Projects', value: String(activeProjects), note: `${state.projects.length} total projects`, tone: 'primary' },
         { label: 'Outstanding Receivables', value: money(summary.outstandingReceivables), note: 'Uncollected contract value', tone: 'warn' }
       ];
@@ -1164,14 +1286,9 @@
         cardEl.style.cursor = 'pointer';
         cardEl.addEventListener('click', () => {
           const key = cardEl.dataset.card;
-          if (key === 'Total Expenses') {
-            showPage('expensesPage');
-            // ensure Expenses shows By Project view
-            const btn = document.querySelector('#expenseViewToggle [data-exp-view="project"]');
-            if (btn) btn.click();
-          } else if (key === 'Material Due') {
-            showPage('materialsPage');
-          } else if (key === 'Outstanding Receivables') {
+          if (key === 'Site Costs') showPage('siteCostsPage');
+          else if (key === 'Running Bill Profit' || key === 'Cheque Expected') showPage('billsPage');
+          else if (key === 'Outstanding Receivables') {
             showPage('projectsPage');
           }
         });
@@ -1181,12 +1298,18 @@
     function renderProjectOptions() {
       const options = state.projects.map(project => `<option value="${project.id}">${project.name}</option>`).join('');
       const empty = '<option value="">No projects yet</option>';
-      const projectSelects = [document.getElementById('expenseProject'), document.getElementById('materialProject')];
+      const projectSelects = [document.getElementById('expenseProject'), document.getElementById('materialProject'), document.getElementById('billProject'), document.getElementById('siteCostProject')];
       projectSelects.forEach(select => {
         if (!select) return;
         select.innerHTML = state.projects.length ? `<option value="">Select project</option>${options}` : empty;
         if (select.value && !state.projects.some(project => project.id === select.value)) select.value = '';
       });
+      const billSelect = document.getElementById('siteCostBill');
+      if (billSelect) {
+        const selected = billSelect.value;
+        billSelect.innerHTML = `<option value="">Not linked to a bill</option>${state.bills.map(bill => `<option value="${bill.id}">${bill.number} — ${getProjectLabel(bill.projectId)}</option>`).join('')}`;
+        billSelect.value = state.bills.some(bill => bill.id === selected) ? selected : '';
+      }
     }
 
     function renderProjects() {
@@ -1314,6 +1437,64 @@
       document.getElementById('materialByProject').innerHTML = rows;
     }
 
+    function getBillFormInput() {
+      return {
+        billAmount: document.getElementById('billAmount').value,
+        holdAmount: document.getElementById('billHold').value,
+        releaseAmount: document.getElementById('billRelease').value,
+        siteCost: document.getElementById('billSiteCost').value,
+        redRate: document.getElementById('billRedRate').value,
+        cdoRate: document.getElementById('billCdoRate').value,
+        vipRate: document.getElementById('billVipRate').value,
+        cgstRate: document.getElementById('billCgstRate').value,
+        sgstRate: document.getElementById('billSgstRate').value,
+        securityRate: document.getElementById('billSecurityRate').value,
+        cgstTdsRate: document.getElementById('billCgstTdsRate').value,
+        sgstTdsRate: document.getElementById('billSgstTdsRate').value,
+        incomeTaxRate: document.getElementById('billIncomeTaxRate').value,
+        labourCessRate: document.getElementById('billLabourCessRate').value
+      };
+    }
+
+    function renderBillCalculation() {
+      const c = calculateRunningBill(getBillFormInput());
+      const rows = [
+        ['Bill amount', c.billAmount], ['CGST (9%)', c.cgst], ['SGST (9%)', c.sgst], ['Total incl. GST', c.total],
+        ['Less: security (5% of total)', -c.security], ['Less: CGST TDS (1%)', -c.cgstTds], ['Less: SGST TDS (1%)', -c.sgstTds], ['Less: income tax (2%)', -c.incomeTax], ['Less: L.C. (1%)', -c.labourCess], ['Less: hold amount', -c.holdAmount], ['Add: release amount', c.releaseAmount],
+        ['Cheque amount', c.chequeAmount], ['RED commission base', c.redCommissionBase], ['Less: RED commission', -c.redCommission], ['Less: CDO commission', -c.cdoCommission], ['Balance amount', c.balanceAmount], ['Less: contractor GST', -c.contractorGst], ['Less: VIP', -c.vip], ['Contractor balance', c.contractorBalance], ['Less: site cost', -c.siteCost], ['Net profit', c.netProfit]
+      ];
+      document.getElementById('billCalculationRows').innerHTML = rows.map(([label, value]) => `<tr><td>${label}</td><td class="right"><strong>${money(value)}</strong></td></tr>`).join('');
+      return c;
+    }
+
+    function renderSiteCosts() {
+      renderProjectOptions();
+      const total = state.siteCosts.reduce((sum, cost) => sum + toNumber(cost.amount), 0);
+      const linked = state.siteCosts.filter(cost => cost.billId).reduce((sum, cost) => sum + toNumber(cost.amount), 0);
+      document.getElementById('siteCostSummary').innerHTML = [
+        { label: 'Total Site Cost', value: money(total) },
+        { label: 'Linked to Bills', value: money(linked) },
+        { label: 'Entries', value: String(state.siteCosts.length) }
+      ].map(item => `<div class="card summary-card"><div class="summary-label">${item.label}</div><p class="summary-value">${item.value}</p></div>`).join('');
+      const byProject = state.projects.map(project => ({ project, total: state.siteCosts.filter(cost => cost.projectId === project.id).reduce((sum, cost) => sum + toNumber(cost.amount), 0) }));
+      document.getElementById('siteCostByProject').innerHTML = byProject.length ? byProject.map(item => `<tr><td>${item.project.name}</td><td>${money(item.total)}</td></tr>`).join('') : '<tr><td colspan="2" class="muted">Add a project first.</td></tr>';
+      document.getElementById('siteCostList').innerHTML = state.siteCosts.length ? state.siteCosts.map(cost => `<tr><td>${safeDate(cost.date)}</td><td>${getProjectLabel(cost.projectId)}</td><td>${cost.billId ? (state.bills.find(bill => bill.id === cost.billId)?.number || 'Deleted bill') : '—'}</td><td>${cost.description}</td><td>${money(cost.amount)}</td><td class="no-print"><button class="btn secondary" data-edit-site-cost="${cost.id}">Edit</button> <button class="btn danger" data-delete-site-cost="${cost.id}">Delete</button></td></tr>`).join('') : '<tr><td colspan="6" class="muted">No site costs entered yet.</td></tr>';
+    }
+
+    function renderBills() {
+      renderProjectOptions();
+      const list = document.getElementById('billList');
+      if (!state.bills.length) {
+        list.innerHTML = '<tr><td colspan="9" class="muted">No running bills saved yet.</td></tr>';
+      } else {
+        list.innerHTML = state.bills.map(bill => {
+          const c = calculateRunningBill(billWithLinkedCosts(bill));
+          return `<tr><td>${safeDate(bill.date)}</td><td>${bill.number}</td><td>${getProjectLabel(bill.projectId)}</td><td>${money(c.billAmount)}</td><td>${money(c.chequeAmount)}</td><td>${money(c.contractorBalance)}</td><td>${money(c.siteCost)}</td><td>${money(c.netProfit)}</td><td class="no-print"><button class="btn secondary" data-edit-bill="${bill.id}">Edit</button> <button class="btn danger" data-delete-bill="${bill.id}">Delete</button> <button class="btn" data-print-bill="${bill.id}">Print</button></td></tr>`;
+        }).join('');
+      }
+      renderBillCalculation();
+    }
+
     function renderProfit() {
       const summary = calculatePL();
       const plCards = [
@@ -1429,10 +1610,8 @@
     function renderAll() {
       renderDashboard();
       renderProjects();
-      renderExpenses();
-      renderMaterials();
-      renderProfit();
-      renderEstimate();
+      renderSiteCosts();
+      renderBills();
     }
 
     function resetProjectForm() {
@@ -1544,6 +1723,96 @@
       renderAll();
     }
 
+    function resetBillForm() {
+      document.getElementById('billForm').reset();
+      document.getElementById('billId').value = '';
+      document.getElementById('billFormTitle').textContent = 'Add Running Bill';
+      document.getElementById('billSaveBtn').textContent = 'Save Running Bill';
+      document.getElementById('billDate').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('billAmount').value = '0';
+      document.getElementById('billHold').value = '0';
+      document.getElementById('billRelease').value = '0';
+      document.getElementById('billSiteCost').value = '0';
+      document.getElementById('billRedRate').value = '10.5';
+      document.getElementById('billCdoRate').value = '5';
+      document.getElementById('billVipRate').value = '10';
+      renderBillCalculation();
+    }
+
+    function resetSiteCostForm() {
+      document.getElementById('siteCostForm').reset();
+      document.getElementById('siteCostId').value = '';
+      document.getElementById('siteCostDate').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('siteCostFormTitle').textContent = 'Add Site Cost';
+      document.getElementById('siteCostSaveBtn').textContent = 'Save Site Cost';
+    }
+
+    function editSiteCost(id) {
+      const cost = state.siteCosts.find(item => item.id === id);
+      if (!cost) return;
+      renderProjectOptions();
+      document.getElementById('siteCostId').value = cost.id;
+      document.getElementById('siteCostDate').value = cost.date || '';
+      document.getElementById('siteCostProject').value = cost.projectId || '';
+      document.getElementById('siteCostBill').value = cost.billId || '';
+      document.getElementById('siteCostDescription').value = cost.description || '';
+      document.getElementById('siteCostAmount').value = cost.amount || 0;
+      document.getElementById('siteCostNotes').value = cost.notes || '';
+      document.getElementById('siteCostFormTitle').textContent = 'Edit Site Cost';
+      document.getElementById('siteCostSaveBtn').textContent = 'Update Site Cost';
+      showPage('siteCostsPage');
+    }
+
+    function deleteSiteCost(id) {
+      if (!confirm('Delete this site cost?')) return;
+      state.siteCosts = state.siteCosts.filter(cost => cost.id !== id);
+      saveState();
+      renderAll();
+    }
+
+    function loadBillForEdit(id) {
+      const bill = state.bills.find(item => item.id === id);
+      if (!bill) return;
+      document.getElementById('billFormTitle').textContent = 'Edit Running Bill';
+      document.getElementById('billSaveBtn').textContent = 'Update Running Bill';
+      document.getElementById('billId').value = bill.id;
+      document.getElementById('billDate').value = bill.date || '';
+      document.getElementById('billNumber').value = bill.number || '';
+      document.getElementById('billProject').value = bill.projectId || '';
+      document.getElementById('billAmount').value = bill.billAmount || 0;
+      document.getElementById('billHold').value = bill.holdAmount || 0;
+      document.getElementById('billRelease').value = bill.releaseAmount || 0;
+      document.getElementById('billSiteCost').value = bill.siteCost || 0;
+      document.getElementById('billRedRate').value = bill.redRate ?? 10.5;
+      document.getElementById('billCdoRate').value = bill.cdoRate ?? 5;
+      document.getElementById('billVipRate').value = bill.vipRate ?? 10;
+      document.getElementById('billCgstRate').value = bill.cgstRate ?? 9;
+      document.getElementById('billSgstRate').value = bill.sgstRate ?? 9;
+      document.getElementById('billSecurityRate').value = bill.securityRate ?? 5;
+      document.getElementById('billCgstTdsRate').value = bill.cgstTdsRate ?? 1;
+      document.getElementById('billSgstTdsRate').value = bill.sgstTdsRate ?? 1;
+      document.getElementById('billIncomeTaxRate').value = bill.incomeTaxRate ?? 2;
+      document.getElementById('billLabourCessRate').value = bill.labourCessRate ?? 1;
+      document.getElementById('billNotes').value = bill.notes || '';
+      renderBillCalculation();
+      showPage('billsPage');
+    }
+
+    function deleteBill(id) {
+      if (!confirm('Delete this running bill?')) return;
+      state.bills = state.bills.filter(bill => bill.id !== id);
+      saveState();
+      renderAll();
+    }
+
+    function printRunningBill(id) {
+      const bill = state.bills.find(item => item.id === id) || state.bills.find(item => item.id === document.getElementById('billId').value);
+      if (!bill) return alert('Save or select a running bill first.');
+      const c = calculateRunningBill(billWithLinkedCosts(bill));
+      const lines = [['Bill amount', c.billAmount], ['CGST (9%)', c.cgst], ['SGST (9%)', c.sgst], ['Total incl. GST', c.total], ['Security deduction', -c.security], ['CGST / SGST TDS', -(c.cgstTds + c.sgstTds)], ['Income tax + L.C.', -(c.incomeTax + c.labourCess)], ['Hold / release', -c.holdAmount + c.releaseAmount], ['Cheque amount', c.chequeAmount], ['RED commission', -c.redCommission], ['CDO commission', -c.cdoCommission], ['Contractor GST', -c.contractorGst], ['VIP', -c.vip], ['Contractor balance', c.contractorBalance], ['Site cost', -c.siteCost], ['Net profit', c.netProfit]];
+      buildPrintWindow(`Running Bill - ${bill.number}`, `<div class="head"><div><div class="brand">Tender Manager</div><p class="muted">Running Bill Statement</p></div><div class="muted">${safeDate(bill.date)}</div></div><div class="box"><h2>${getProjectLabel(bill.projectId)}</h2><p class="muted">Invoice / RA bill no.: ${bill.number}</p></div><div class="box"><table><tbody>${lines.map(([label, value]) => `<tr><td>${label}</td><td>${money(value)}</td></tr>`).join('')}</tbody></table></div><div class="box"><strong>Notes</strong><p class="muted" style="margin-top:8px;">${bill.notes || 'No notes added.'}</p></div>`);
+    }
+
     function calculateMiscFromForm() {
       const contract = toNumber(document.getElementById('projectContract').value);
       const mode = document.getElementById('projectMiscMode').value;
@@ -1620,9 +1889,9 @@
           <div class="box"><strong>Outstanding</strong><div style="margin-top:8px; font-size:1.2rem;">${money(finance.receivable)}</div></div>
         </div>
         <div class="box">
-          <div class="row"><span>Expenses logged</span><strong>${money(expenseTotal)}</strong></div>
-          <div class="row"><span>Material purchases</span><strong>${money(materialTotal)}</strong></div>
-          <div class="row"><span>Related entries</span><strong>${relatedExpenses.length + relatedMaterials.length}</strong></div>
+          <div class="row"><span>Site costs logged</span><strong>${money(state.siteCosts.filter(cost => cost.projectId === projectId).reduce((sum, cost) => sum + toNumber(cost.amount), 0))}</strong></div>
+          <div class="row"><span>Running bills</span><strong>${state.bills.filter(bill => bill.projectId === projectId).length}</strong></div>
+          <div class="row"><span>Legacy entries</span><strong>${relatedExpenses.length + relatedMaterials.length}</strong></div>
         </div>
         <div class="box">
           <h3>Notes</h3>
@@ -1777,14 +2046,60 @@
       renderAll();
     });
 
+    document.getElementById('billForm').addEventListener('submit', event => {
+      event.preventDefault();
+      if (!state.projects.length) return alert('Add a project first.');
+      const id = document.getElementById('billId').value || uid('bill');
+      const bill = {
+        id,
+        date: document.getElementById('billDate').value,
+        number: document.getElementById('billNumber').value.trim(),
+        projectId: document.getElementById('billProject').value,
+        ...getBillFormInput(),
+        holdAmount: toNumber(document.getElementById('billHold').value),
+        releaseAmount: toNumber(document.getElementById('billRelease').value),
+        siteCost: toNumber(document.getElementById('billSiteCost').value),
+        redRate: toNumber(document.getElementById('billRedRate').value),
+        cdoRate: toNumber(document.getElementById('billCdoRate').value),
+        vipRate: toNumber(document.getElementById('billVipRate').value),
+        billAmount: toNumber(document.getElementById('billAmount').value),
+        notes: document.getElementById('billNotes').value.trim()
+      };
+      const existing = state.bills.findIndex(item => item.id === id);
+      if (existing >= 0) state.bills[existing] = bill; else state.bills.unshift(bill);
+      saveState();
+      resetBillForm();
+      renderAll();
+    });
+
+    document.getElementById('siteCostForm').addEventListener('submit', event => {
+      event.preventDefault();
+      if (!state.projects.length) return alert('Add a project first.');
+      const id = document.getElementById('siteCostId').value || uid('site_cost');
+      const cost = { id, date: document.getElementById('siteCostDate').value, projectId: document.getElementById('siteCostProject').value, billId: document.getElementById('siteCostBill').value, description: document.getElementById('siteCostDescription').value.trim(), amount: toNumber(document.getElementById('siteCostAmount').value), notes: document.getElementById('siteCostNotes').value.trim() };
+      const existing = state.siteCosts.findIndex(item => item.id === id);
+      if (existing >= 0) state.siteCosts[existing] = cost; else state.siteCosts.unshift(cost);
+      saveState();
+      resetSiteCostForm();
+      renderAll();
+    });
+
     document.getElementById('projectCancelBtn').addEventListener('click', () => resetProjectForm());
     document.getElementById('expenseCancelBtn').addEventListener('click', () => resetExpenseForm());
     document.getElementById('materialCancelBtn').addEventListener('click', () => resetMaterialForm());
+    document.getElementById('billCancelBtn').addEventListener('click', resetBillForm);
+    document.getElementById('siteCostCancelBtn').addEventListener('click', resetSiteCostForm);
+    document.getElementById('siteCostBill').addEventListener('change', event => {
+      const bill = state.bills.find(item => item.id === event.target.value);
+      if (bill) document.getElementById('siteCostProject').value = bill.projectId;
+    });
+    document.getElementById('printBillBtn').addEventListener('click', () => printRunningBill(document.getElementById('billId').value));
 
     document.getElementById('materialQty').addEventListener('input', updateMaterialCalc);
     document.getElementById('materialRate').addEventListener('input', updateMaterialCalc);
     document.getElementById('materialPaid').addEventListener('input', updateMaterialCalc);
     document.getElementById('materialPaymentStatus').addEventListener('change', updateMaterialCalc);
+    ['billAmount', 'billHold', 'billRelease', 'billSiteCost', 'billRedRate', 'billCdoRate', 'billVipRate', 'billCgstRate', 'billSgstRate', 'billSecurityRate', 'billCgstTdsRate', 'billSgstTdsRate', 'billIncomeTaxRate', 'billLabourCessRate'].forEach(id => document.getElementById(id).addEventListener('input', renderBillCalculation));
 
     document.getElementById('expenseViewToggle').addEventListener('click', event => {
       const button = event.target.closest('[data-exp-view]');
@@ -1806,14 +2121,18 @@
     document.getElementById('printEstimateBtn').addEventListener('click', printEstimate);
 
     document.getElementById('resetDemoBtn').addEventListener('click', () => {
-      if (!confirm('Clear all stored projects, expenses, and materials?')) return;
+      if (!confirm('Clear all stored projects, site costs, and running bills?')) return;
       state.projects = [];
       state.expenses = [];
       state.materials = [];
+      state.siteCosts = [];
+      state.bills = [];
       saveState();
       resetProjectForm();
       resetExpenseForm();
       resetMaterialForm();
+      resetSiteCostForm();
+      resetBillForm();
       renderAll();
       showPage('dashboardPage');
     });
@@ -1838,6 +2157,16 @@
       if (deleteProjectBtn) deleteProject(deleteProjectBtn.dataset.deleteProject);
       const invoiceProjectBtn = event.target.closest('[data-invoice-project]');
       if (invoiceProjectBtn) printInvoice(invoiceProjectBtn.dataset.invoiceProject);
+      const editBill = event.target.closest('[data-edit-bill]');
+      if (editBill) loadBillForEdit(editBill.dataset.editBill);
+      const deleteBillBtn = event.target.closest('[data-delete-bill]');
+      if (deleteBillBtn) deleteBill(deleteBillBtn.dataset.deleteBill);
+      const printBill = event.target.closest('[data-print-bill]');
+      if (printBill) printRunningBill(printBill.dataset.printBill);
+      const editSiteCostBtn = event.target.closest('[data-edit-site-cost]');
+      if (editSiteCostBtn) editSiteCost(editSiteCostBtn.dataset.editSiteCost);
+      const deleteSiteCostBtn = event.target.closest('[data-delete-site-cost]');
+      if (deleteSiteCostBtn) deleteSiteCost(deleteSiteCostBtn.dataset.deleteSiteCost);
     });
 
     renderNav();
@@ -1845,6 +2174,8 @@
     resetProjectForm();
     resetExpenseForm();
     resetMaterialForm();
+    resetSiteCostForm();
+    resetBillForm();
     updateProjectMiscHint();
     updateMaterialCalc();
     renderAll();
